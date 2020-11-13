@@ -33,6 +33,7 @@
 
 #include <array>
 #include <chrono>
+#include <cassert>
 
 #include "ext/glad/glad.h"
 
