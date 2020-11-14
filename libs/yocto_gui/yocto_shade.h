@@ -270,10 +270,9 @@ void set_normals(shade_shape* shape, const vector<vec3f>& normals);
 void set_texcoords(shade_shape* shape, const vector<vec2f>& texcoords);
 void set_colors(shade_shape* shape, const vector<vec4f>& colors);
 void set_tangents(shade_shape* shape, const vector<vec4f>& tangents);
-void set_instances(
-    shade_shape* shape, const vector<vec3f>& froms, const vector<vec3f>& tos);
+void set_instances(shade_shape* shape, const vector<frame3f>& frames);
 
-// get shaoe properties
+// get shape properties
 const ogl_arraybuffer* get_positions(const shade_shape* shape);
 const ogl_arraybuffer* get_normals(const shade_shape* shape);
 const ogl_arraybuffer* get_texcoords(const shade_shape* shape);

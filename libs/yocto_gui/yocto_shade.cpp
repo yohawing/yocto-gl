@@ -112,22 +112,37 @@ void set_tangents(shade_shape* shape, const vector<vec4f>& tangents) {
     set_vertex_buffer(shape->shape, tangents, 4);
   }
 }
-void set_instances(
-    shade_shape* shape, const vector<vec3f>& froms, const vector<vec3f>& tos) {
-  if (froms.empty()) {
+void set_instances(shade_shape* shape, const vector<frame3f>& frames) {
+  if (frames.empty()) {
     set_vertex_buffer(shape->shape, vec3f{0, 0, 0}, 5);
+    set_vertex_buffer(shape->shape, vec3f{0, 0, 0}, 6);
+    set_vertex_buffer(shape->shape, vec3f{0, 0, 0}, 7);
+    set_vertex_buffer(shape->shape, vec3f{0, 0, 0}, 8);
     set_instance_buffer(shape->shape, 5, false);
-  } else {
-    set_vertex_buffer(shape->shape, froms, 5);
-    set_instance_buffer(shape->shape, 5, true);
-  }
-  if (tos.empty()) {
-    set_vertex_buffer(shape->shape, vec3f{0, 0, 0}, 5);
     set_instance_buffer(shape->shape, 6, false);
-  } else {
-    set_vertex_buffer(shape->shape, tos, 6);
-    set_instance_buffer(shape->shape, 6, true);
+    set_instance_buffer(shape->shape, 7, false);
+    set_instance_buffer(shape->shape, 8, false);
+    return;
   }
+
+  auto x = vector<vec3f>(frames.size());
+  auto y = vector<vec3f>(frames.size());
+  auto z = vector<vec3f>(frames.size());
+  auto o = vector<vec3f>(frames.size());
+  for (int i = 0; i < frames.size(); i++) {
+    x[i] = frames[i].x;
+    y[i] = frames[i].y;
+    z[i] = frames[i].z;
+    o[i] = frames[i].o;
+  }
+  set_vertex_buffer(shape->shape, x, 5);
+  set_vertex_buffer(shape->shape, y, 6);
+  set_vertex_buffer(shape->shape, z, 7);
+  set_vertex_buffer(shape->shape, o, 8);
+  set_instance_buffer(shape->shape, 5, true);
+  set_instance_buffer(shape->shape, 6, true);
+  set_instance_buffer(shape->shape, 7, true);
+  set_instance_buffer(shape->shape, 8, true);
 }
 
 void set_points(shade_shape* shape, const vector<int>& points) {
@@ -847,8 +862,10 @@ layout(location = 1) in vec3 normals;
 layout(location = 2) in vec2 texcoords;
 layout(location = 3) in vec4 colors;
 layout(location = 4) in vec4 tangents;
-layout(location = 5) in vec3 instance_from;
-layout(location = 6) in vec3 instance_to;
+layout(location = 5) in vec3 instance_x;
+layout(location = 6) in vec3 instance_y;
+layout(location = 7) in vec3 instance_z;
+layout(location = 8) in vec3 instance_o;
 
 uniform mat4  frame;
 uniform mat4  frameit;
@@ -882,23 +899,15 @@ void main() {
   normal     = (frameit * vec4(normal, 0)).xyz;
   tangsp.xyz = (frame * vec4(tangsp.xyz, 0)).xyz;
 
-  if (instance_from != instance_to) {
-    vec3 dir = instance_to - instance_from;
-
-    vec3 up = abs(dir.z) < 0.999 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
-    vec3 tangent   = normalize(cross(up, dir));
-    vec3 bitangent = normalize(cross(dir, tangent));
-
+  if(instance_x != instance_y) {
     mat3 mat;
-    mat[2]    = dir;
-    mat[0]    = tangent;
-    mat[1]    = bitangent;
+    mat[0] = instance_x;
+    mat[1] = instance_y;
+    mat[2] = instance_z;
     position  = mat * position;
     normal    = mat * normal;
-    tangent   = mat * tangent;
-    bitangent = mat * bitangent;
+    position += instance_o;
   }
-  position += instance_from;
 
   // clip
   gl_Position = projection * view * vec4(position, 1);

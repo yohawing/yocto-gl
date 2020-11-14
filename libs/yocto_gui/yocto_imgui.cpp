@@ -1,5 +1,5 @@
 //
-// Utilities to use OpenGL 3, GLFW and ImGui.
+// Utilities to use ImGui.
 //
 
 //
@@ -31,9 +31,9 @@
 
 #include <yocto/yocto_commonio.h>
 
-#include <algorithm>
-#include <mutex>
-#include <unordered_map>
+#include <algorithm>      // std::sort
+#include <mutex>          // logging
+#include <unordered_map>  // draw_filedialog
 
 #include "ext/glad/glad.h"
 
@@ -106,16 +106,6 @@ bool begin_imgui(gui_widgets* widgets, const string& name,
       ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
           ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
           ImGuiWindowFlags_NoSavedSettings));
-
-  // if (ImGui::Begin(win->title.c_str(), nullptr,
-  //         ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-  //             ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse |
-  //             ImGuiWindowFlags_NoSavedSettings)) {
-  //   win->widgets_cb(win, win->input);
-  // }
-  // ImGui::End();
-  // ImGui::Render();
-  // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
 void end_imgui(gui_widgets* widgets) {

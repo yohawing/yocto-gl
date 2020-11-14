@@ -32,8 +32,8 @@
 #include <yocto/yocto_commonio.h>
 
 #include <array>
-#include <chrono>
 #include <cassert>
+#include <chrono>
 
 #include "ext/glad/glad.h"
 
@@ -92,6 +92,11 @@ void init_window(gui_window* win, const vec2i& size, const string& title,
 #if __APPLE__
   glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
+
+  // Set multisample anti-aliasing
+  if (win->msaa > 1) {
+    glfwWindowHint(GLFW_SAMPLES, win->msaa);
+  }
 
   // create window
   win->title = title;
@@ -161,6 +166,8 @@ void init_window(gui_window* win, const vec2i& size, const string& title,
   // init gl extensions
   if (!gladLoadGL())
     throw std::runtime_error{"cannot initialize OpenGL extensions"};
+
+  if (win->msaa > 1) glEnable(GL_MULTISAMPLE);
 
   // TODO(giacomo): eventually remove this stuff
   win->widgets       = true;

@@ -120,36 +120,6 @@ vector<vec3f> compute_normals(const generic_shape& shape) {
   }
 }
 
-// Create a shape with small spheres for each point
-quads_shape make_spheres(
-    const vector<vec3f>& positions, float radius, int steps) {
-  auto shape = quads_shape{};
-  for (auto position : positions) {
-    auto sphere = make_sphere(steps, radius);
-    for (auto& p : sphere.positions) p += position;
-    merge_quads(shape.quads, shape.positions, shape.normals, shape.texcoords,
-        sphere.quads, sphere.positions, sphere.normals, sphere.texcoords);
-  }
-  return shape;
-}
-quads_shape make_cylinders(const vector<vec2i>& lines,
-    const vector<vec3f>& positions, float radius, const vec3i& steps) {
-  auto shape = quads_shape{};
-  for (auto line : lines) {
-    auto len      = length(positions[line.x] - positions[line.y]);
-    auto dir      = normalize(positions[line.x] - positions[line.y]);
-    auto center   = (positions[line.x] + positions[line.y]) / 2;
-    auto cylinder = make_uvcylinder({4, 1, 1}, {radius, len / 2});
-    auto frame    = frame_fromz(center, dir);
-    for (auto& p : cylinder.positions) p = transform_point(frame, p);
-    for (auto& n : cylinder.normals) n = transform_direction(frame, n);
-    merge_quads(shape.quads, shape.positions, shape.normals, shape.texcoords,
-        cylinder.quads, cylinder.positions, cylinder.normals,
-        cylinder.texcoords);
-  }
-  return shape;
-}
-
 void init_glscene(app_state* app, shade_scene* glscene, generic_shape* ioshape,
     progress_callback progress_cb) {
   // handle progress
@@ -173,11 +143,12 @@ void init_glscene(app_state* app, shade_scene* glscene, generic_shape* ioshape,
 
   // material
   if (progress_cb) progress_cb("convert material", progress.x++, progress.y);
-  auto glmaterial  = add_material(glscene, {0, 0, 0}, {0.5, 1, 0.5}, 1, 0, 0.2);
-  auto glmateriale = add_material(glscene, {0, 0, 0}, {0, 0, 0}, 0, 0, 1);
-  auto glmaterialv = add_material(glscene, {0, 0, 0}, {0, 0, 0}, 0, 0, 1);
-  set_unlit(glmateriale, true);
-  set_unlit(glmaterialv, true);
+  auto shape_material = add_material(
+      glscene, {0, 0, 0}, {0.5, 1, 0.5}, 1, 0, 0.2);
+  auto edges_material = add_material(
+      glscene, {0, 0, 0}, {0, 0, 0.5}, 0, 0, 0.2);
+  auto vertices_material = add_material(
+      glscene, {0, 0, 0}, {0.5, 0, 0}, 0, 0, 0.2);
 
   // shapes
   if (progress_cb) progress_cb("convert shape", progress.x++, progress.y);
@@ -187,42 +158,47 @@ void init_glscene(app_state* app, shade_scene* glscene, generic_shape* ioshape,
   if (!is_initialized(get_normals(model_shape))) {
     app->drawgl_prms.faceted = true;
   }
-  set_instances(model_shape, {}, {});
+  set_instances(model_shape, {});  // TODO(giacomo): remove
 
-  auto edges = get_edges(ioshape->triangles, ioshape->quads);
-  auto froms = vector<vec3f>();
-  auto tos   = vector<vec3f>();
-  froms.reserve(edges.size());
-  tos.reserve(edges.size());
+  auto  edges           = get_edges(ioshape->triangles, ioshape->quads);
   float avg_edge_length = 0;
+  auto  edge_frames     = vector<frame3f>();
+  edge_frames.reserve(edges.size());
   for (auto& edge : edges) {
-    auto from = ioshape->positions[edge.x];
-    auto to   = ioshape->positions[edge.y];
-    froms.push_back(from);
-    tos.push_back(to);
+    auto from  = ioshape->positions[edge.x];
+    auto to    = ioshape->positions[edge.y];
+    auto frame = frame_fromz(from, normalize(to - from));
+    frame.z *= length(to - from);
+    edge_frames.push_back(frame);
     avg_edge_length += length(from - to);
   }
+
   avg_edge_length /= edges.size();
-  auto cylinder_radius = 0.05f * avg_edge_length;
+  auto cylinder_radius = 0.03f * avg_edge_length;
   auto cylinder        = make_uvcylinder({4, 1, 1}, {cylinder_radius, 1});
   for (auto& p : cylinder.positions) {
     p.z = p.z * 0.5 + 0.5;
   }
   auto edges_shape = add_shape(glscene, {}, {}, {}, cylinder.quads,
       cylinder.positions, cylinder.normals, cylinder.texcoords, {});
-  set_instances(edges_shape, froms, tos);
+  set_instances(edges_shape, edge_frames);
 
-  auto vertices_radius = 3.0f * cylinder_radius;
-  auto vertices        = make_spheres(ioshape->positions, vertices_radius, 2);
-  auto vertices_shape  = add_shape(glscene, {}, {}, {}, vertices.quads,
-      vertices.positions, vertices.normals, vertices.texcoords, {});
-  set_instances(vertices_shape, {}, {});
+  auto sphere_radius   = 3.0f * cylinder_radius;
+  auto sphere          = make_sphere(3, sphere_radius);
+  auto vertices_shape  = add_shape(glscene, {}, {}, {}, sphere.quads,
+      sphere.positions, sphere.normals, sphere.texcoords, {});
+  auto vertices_frames = vector<frame3f>(ioshape->positions.size());
+  for (int i = 0; i < vertices_frames.size(); i++) {
+    vertices_frames[i]   = identity3x4f;
+    vertices_frames[i].o = ioshape->positions[i];
+  }
+  set_instances(vertices_shape, vertices_frames);
 
   // shapes
   if (progress_cb) progress_cb("convert instance", progress.x++, progress.y);
-  add_instance(glscene, identity3x4f, model_shape, glmaterial);
-  add_instance(glscene, identity3x4f, edges_shape, glmateriale, true);
-  add_instance(glscene, identity3x4f, vertices_shape, glmaterialv, true);
+  add_instance(glscene, identity3x4f, model_shape, shape_material);
+  add_instance(glscene, identity3x4f, edges_shape, edges_material, true);
+  add_instance(glscene, identity3x4f, vertices_shape, vertices_material, true);
 
   // done
   if (progress_cb) progress_cb("convert done", progress.x++, progress.y);
@@ -332,10 +308,11 @@ int main(int argc, const char* argv[]) {
   auto app         = new app_state{};
   auto filename    = "tests/_data/shapes/bunny.obj"s;
   auto camera_name = ""s;
-
+  auto msaa        = 1;
   // parse command line
   auto cli = make_cli("yshapeview", "views shapes inteactively");
   add_option(cli, "--camera", camera_name, "Camera name.");
+  add_option(cli, "--msaa", msaa, "Multi sample anti-aliasing.");
   add_option(
       cli, "--resolution,-r", app->drawgl_prms.resolution, "Image resolution.");
   add_option(cli, "--lighting", app->drawgl_prms.lighting, "Lighting type.",
@@ -343,7 +320,8 @@ int main(int argc, const char* argv[]) {
   add_option(cli, "shape", filename, "Shape filename", true);
   parse_cli(cli, argc, argv);
 
-  auto window = new gui_window{};
+  auto window  = new gui_window{};
+  window->msaa = msaa;
   init_window(window, {1280 + 320, 720}, "yshapeview", true);
   window->user_data = app;
 
