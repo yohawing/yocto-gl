@@ -272,6 +272,9 @@ void set_colors(shade_shape* shape, const vector<vec4f>& colors);
 void set_tangents(shade_shape* shape, const vector<vec4f>& tangents);
 void set_instances(shade_shape* shape, const vector<frame3f>& frames);
 
+// set point size
+void set_point_size(shade_shape* shape, float point_size);
+
 // get shape properties
 const ogl_arraybuffer* get_positions(const shade_shape* shape);
 const ogl_arraybuffer* get_normals(const shade_shape* shape);
