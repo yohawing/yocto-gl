@@ -86,7 +86,7 @@ struct app_state {
   string            loader_error = "";
 
   // imgui
-  gui_widgets widgets = {};
+  gui_widget* widget = new gui_widget{};
 
   ~app_state() {
     if (ioscene) delete ioscene;
@@ -199,35 +199,35 @@ void draw(app_state* app, const gui_input& input) {
       app->drawgl_prms);
 }
 
-auto draw_widgets(app_state* app, const gui_input& input) {
-  auto widgets = &app->widgets;
-  begin_imgui(widgets, "ysceneviews");
-  draw_progressbar(widgets, app->status.c_str(), app->current, app->total);
-  if (draw_combobox(widgets, "camera", app->iocamera, app->ioscene->cameras)) {
+auto draw_widget(app_state* app, const gui_input& input) {
+  auto widget = app->widget;
+  begin_widget(widget, "ysceneviews");
+  draw_progressbar(widget, app->status.c_str(), app->current, app->total);
+  if (draw_combobox(widget, "camera", app->iocamera, app->ioscene->cameras)) {
     for (auto idx = 0; idx < app->ioscene->cameras.size(); idx++) {
       if (app->ioscene->cameras[idx] == app->iocamera)
         app->glcamera = app->glscene->cameras[idx];
     }
   }
   auto& params = app->drawgl_prms;
-  draw_slider(widgets, "resolution", params.resolution, 0, 4096);
-  draw_checkbox(widgets, "wireframe", params.wireframe);
-  continue_line(widgets);
-  draw_checkbox(widgets, "faceted", params.faceted);
-  continue_line(widgets);
-  draw_checkbox(widgets, "double sided", params.double_sided);
+  draw_slider(widget, "resolution", params.resolution, 0, 4096);
+  draw_checkbox(widget, "wireframe", params.wireframe);
+  continue_line(widget);
+  draw_checkbox(widget, "faceted", params.faceted);
+  continue_line(widget);
+  draw_checkbox(widget, "double sided", params.double_sided);
   draw_combobox(
-      widgets, "lighting", (int&)params.lighting, shade_lighting_names);
-  // draw_checkbox(widgets, "edges", params.edges);
-  draw_slider(widgets, "exposure", params.exposure, -10, 10);
-  draw_slider(widgets, "gamma", params.gamma, 0.1f, 4);
-  draw_slider(widgets, "near", params.near, 0.01f, 1.0f);
-  draw_slider(widgets, "far", params.far, 1000.0f, 10000.0f);
-  end_imgui(widgets);
+      widget, "lighting", (int&)params.lighting, shade_lighting_names);
+  // draw_checkbox(widget, "edges", params.edges);
+  draw_slider(widget, "exposure", params.exposure, -10, 10);
+  draw_slider(widget, "gamma", params.gamma, 0.1f, 4);
+  draw_slider(widget, "near", params.near, 0.01f, 1.0f);
+  draw_slider(widget, "far", params.far, 1000.0f, 10000.0f);
+  end_widget(widget);
 }
 
 void update_camera(app_state* app, const gui_input& input) {
-  if (is_active(&app->widgets)) return;
+  if (is_active(app->widget)) return;
 
   // handle mouse and keyboard for navigation
   if ((input.mouse_left || input.mouse_right) && !input.modifier_alt) {
@@ -251,7 +251,7 @@ void update_app(const gui_input& input, void* data) {
 
   update_camera(app, input);
   draw(app, input);
-  draw_widgets(app, input);
+  draw_widget(app, input);
 }
 
 int main(int argc, const char* argv[]) {
@@ -292,7 +292,7 @@ int main(int argc, const char* argv[]) {
         app->total   = total;
       });
   app->glcamera = app->glscene->cameras.front();
-  app->widgets  = create_imgui(window);
+  init_widget(app->widget, window);
 
   run_ui(window, update_app);
   clear_scene(app->glscene);

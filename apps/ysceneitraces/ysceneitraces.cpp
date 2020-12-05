@@ -77,7 +77,7 @@ struct app_state {
   std::atomic<int> total   = 0;
 
   // imgui
-  gui_widgets widgets = {};
+  gui_widget* widget = new gui_widget{};
 
   ~app_state() {
     if (render_state) trace_stop(render_state);
@@ -251,29 +251,29 @@ void draw_scene(app_state* app, const gui_input& input) {
   if (app->render_counter > 10) app->render_counter = 0;
 }
 
-void draw_widgets(app_state* app, const gui_input& input) {
-  auto widgets = &app->widgets;
-  begin_imgui(widgets, "ysceneitraces");
+void draw_widget(app_state* app, const gui_input& input) {
+  auto widget = app->widget;
+  begin_widget(widget, "ysceneitraces");
   auto  edited  = 0;
   auto& tparams = app->params;
-  draw_progressbar(widgets, "render", app->current, app->total);
+  draw_progressbar(widget, "render", app->current, app->total);
   edited += draw_combobox(
-      widgets, "camera", app->camera, app->scene->cameras, app->camera_names);
-  edited += draw_slider(widgets, "resolution", tparams.resolution, 180, 4096);
-  edited += draw_slider(widgets, "nsamples", tparams.samples, 16, 4096);
+      widget, "camera", app->camera, app->scene->cameras, app->camera_names);
+  edited += draw_slider(widget, "resolution", tparams.resolution, 180, 4096);
+  edited += draw_slider(widget, "nsamples", tparams.samples, 16, 4096);
   edited += draw_combobox(
-      widgets, "tracer", (int&)tparams.sampler, trace_sampler_names);
+      widget, "tracer", (int&)tparams.sampler, trace_sampler_names);
   edited += draw_combobox(
-      widgets, "false color", (int&)tparams.falsecolor, trace_falsecolor_names);
-  edited += draw_slider(widgets, "nbounces", tparams.bounces, 1, 128);
-  edited += draw_checkbox(widgets, "envhidden", tparams.envhidden);
-  continue_line(widgets);
-  edited += draw_checkbox(widgets, "filter", tparams.tentfilter);
-  edited += draw_slider(widgets, "seed", (int&)tparams.seed, 0, 1000000);
-  edited += draw_slider(widgets, "pratio", tparams.pratio, 1, 64);
-  edited += draw_slider(widgets, "exposure", app->exposure, -5, 5);
+      widget, "false color", (int&)tparams.falsecolor, trace_falsecolor_names);
+  edited += draw_slider(widget, "nbounces", tparams.bounces, 1, 128);
+  edited += draw_checkbox(widget, "envhidden", tparams.envhidden);
+  continue_line(widget);
+  edited += draw_checkbox(widget, "filter", tparams.tentfilter);
+  edited += draw_slider(widget, "seed", (int&)tparams.seed, 0, 1000000);
+  edited += draw_slider(widget, "pratio", tparams.pratio, 1, 64);
+  edited += draw_slider(widget, "exposure", app->exposure, -5, 5);
   if (edited) reset_display(app);
-  end_imgui(widgets);
+  end_widget(widget);
 }
 
 void key_input(app_state* app, const gui_input& input) {
@@ -311,7 +311,7 @@ void key_input(app_state* app, const gui_input& input) {
 }
 
 void mouse_input(app_state* app, const gui_input& input) {
-  if (is_active(&app->widgets)) return;
+  if (is_active(app->widget)) return;
   if ((input.mouse_left || input.mouse_right) && !input.modifier_alt) {
     auto dolly  = 0.0f;
     auto pan    = zero2f;
@@ -334,7 +334,7 @@ void update_app(const gui_input& input, void* user_data) {
   mouse_input(app, input);
   key_input(app, input);
   draw_scene(app, input);
-  draw_widgets(app, input);
+  draw_widget(app, input);
 }
 
 int main(int argc, const char* argv[]) {
@@ -413,7 +413,7 @@ int main(int argc, const char* argv[]) {
   auto window = new gui_window{};
   init_window(window, {1280 + 320, 720}, "yscenetraces", true);
   window->user_data = app;
-  app->widgets      = create_imgui(window);
+  init_widget(app->widget, window);
 
   run_ui(window, update_app);
 

@@ -58,91 +58,91 @@ namespace yocto {
 
 struct gui_window;
 
-struct gui_widgets {
+struct gui_widget {
   gui_window* window = nullptr;
 };
 
-gui_widgets create_imgui(gui_window* win);
+void init_widget(gui_widget* widget, gui_window* window);
 
-bool begin_imgui(gui_widgets* widgets, const string& name,
+bool begin_widget(gui_widget* widget, const string& name,
     const vec2i& position = {0, 0}, const vec2i& size = {320, 720});
-void end_imgui(gui_widgets* widgets);
+void end_widget(gui_widget* widget);
 
-bool is_active(gui_widgets* widgets);
+bool is_active(gui_widget* widget);
 
-bool begin_header(gui_widgets* widgets, const char* title);
-void end_header(gui_widgets* widgets);
+bool begin_header(gui_widget* widget, const char* title);
+void end_header(gui_widget* widget);
 
-void draw_label(gui_widgets* widgets, const char* lbl, const string& text);
+void draw_label(gui_widget* widget, const char* lbl, const string& text);
 
-void draw_separator(gui_widgets* widgets);
-void continue_line(gui_widgets* widgets);
+void draw_separator(gui_widget* widget);
+void continue_line(gui_widget* widget);
 
-bool draw_button(gui_widgets* widgets, const char* lbl, bool enabled = true);
+bool draw_button(gui_widget* widget, const char* lbl, bool enabled = true);
 
-bool draw_textinput(gui_widgets* widgets, const char* lbl, string& value);
-
-bool draw_slider(
-    gui_widgets* widgets, const char* lbl, float& value, float min, float max);
-bool draw_slider(
-    gui_widgets* widgets, const char* lbl, vec2f& value, float min, float max);
-bool draw_slider(
-    gui_widgets* widgets, const char* lbl, vec3f& value, float min, float max);
-bool draw_slider(
-    gui_widgets* widgets, const char* lbl, vec4f& value, float min, float max);
+bool draw_textinput(gui_widget* widget, const char* lbl, string& value);
 
 bool draw_slider(
-    gui_widgets* widgets, const char* lbl, int& value, int min, int max);
+    gui_widget* widget, const char* lbl, float& value, float min, float max);
 bool draw_slider(
-    gui_widgets* widgets, const char* lbl, vec2i& value, int min, int max);
+    gui_widget* widget, const char* lbl, vec2f& value, float min, float max);
 bool draw_slider(
-    gui_widgets* widgets, const char* lbl, vec3i& value, int min, int max);
+    gui_widget* widget, const char* lbl, vec3f& value, float min, float max);
 bool draw_slider(
-    gui_widgets* widgets, const char* lbl, vec4i& value, int min, int max);
+    gui_widget* widget, const char* lbl, vec4f& value, float min, float max);
 
-bool draw_dragger(gui_widgets* widgets, const char* lbl, float& value,
+bool draw_slider(
+    gui_widget* widget, const char* lbl, int& value, int min, int max);
+bool draw_slider(
+    gui_widget* widget, const char* lbl, vec2i& value, int min, int max);
+bool draw_slider(
+    gui_widget* widget, const char* lbl, vec3i& value, int min, int max);
+bool draw_slider(
+    gui_widget* widget, const char* lbl, vec4i& value, int min, int max);
+
+bool draw_dragger(gui_widget* widget, const char* lbl, float& value,
     float speed = 1.0f, float min = 0.0f, float max = 0.0f);
-bool draw_dragger(gui_widgets* widgets, const char* lbl, vec2f& value,
+bool draw_dragger(gui_widget* widget, const char* lbl, vec2f& value,
     float speed = 1.0f, float min = 0.0f, float max = 0.0f);
-bool draw_dragger(gui_widgets* widgets, const char* lbl, vec3f& value,
+bool draw_dragger(gui_widget* widget, const char* lbl, vec3f& value,
     float speed = 1.0f, float min = 0.0f, float max = 0.0f);
-bool draw_dragger(gui_widgets* widgets, const char* lbl, vec4f& value,
+bool draw_dragger(gui_widget* widget, const char* lbl, vec4f& value,
     float speed = 1.0f, float min = 0.0f, float max = 0.0f);
 
-bool draw_dragger(gui_widgets* widgets, const char* lbl, int& value,
+bool draw_dragger(gui_widget* widget, const char* lbl, int& value,
     float speed = 1, int min = 0, int max = 0);
-bool draw_dragger(gui_widgets* widgets, const char* lbl, vec2i& value,
+bool draw_dragger(gui_widget* widget, const char* lbl, vec2i& value,
     float speed = 1, int min = 0, int max = 0);
-bool draw_dragger(gui_widgets* widgets, const char* lbl, vec3i& value,
+bool draw_dragger(gui_widget* widget, const char* lbl, vec3i& value,
     float speed = 1, int min = 0, int max = 0);
-bool draw_dragger(gui_widgets* widgets, const char* lbl, vec4i& value,
+bool draw_dragger(gui_widget* widget, const char* lbl, vec4i& value,
     float speed = 1, int min = 0, int max = 0);
 
-bool draw_checkbox(gui_widgets* widgets, const char* lbl, bool& value);
+bool draw_checkbox(gui_widget* widget, const char* lbl, bool& value);
 bool draw_checkbox(
-    gui_widgets* widgets, const char* lbl, bool& value, bool invert);
+    gui_widget* widget, const char* lbl, bool& value, bool invert);
 
-bool draw_coloredit(gui_widgets* widgets, const char* lbl, vec3f& value);
-bool draw_coloredit(gui_widgets* widgets, const char* lbl, vec4f& value);
+bool draw_coloredit(gui_widget* widget, const char* lbl, vec3f& value);
+bool draw_coloredit(gui_widget* widget, const char* lbl, vec4f& value);
 
-bool draw_hdrcoloredit(gui_widgets* widgets, const char* lbl, vec3f& value);
-bool draw_hdrcoloredit(gui_widgets* widgets, const char* lbl, vec4f& value);
+bool draw_hdrcoloredit(gui_widget* widget, const char* lbl, vec3f& value);
+bool draw_hdrcoloredit(gui_widget* widget, const char* lbl, vec4f& value);
 
-bool draw_combobox(gui_widgets* widgets, const char* lbl, int& idx,
+bool draw_combobox(gui_widget* widget, const char* lbl, int& idx,
     const vector<string>& labels);
-bool draw_combobox(gui_widgets* widgets, const char* lbl, string& value,
+bool draw_combobox(gui_widget* widget, const char* lbl, string& value,
     const vector<string>& labels);
-bool draw_combobox(gui_widgets* widgets, const char* lbl, int& idx, int num,
+bool draw_combobox(gui_widget* widget, const char* lbl, int& idx, int num,
     const function<string(int)>& labels, bool include_null = false);
 
 template <typename T>
-inline bool draw_combobox(gui_widgets* widgets, const char* lbl, T*& value,
+inline bool draw_combobox(gui_widget* widget, const char* lbl, T*& value,
     const vector<T*>& vals, bool include_null = false) {
   auto idx = -1;
   for (auto pos = 0; pos < vals.size(); pos++)
     if (vals[pos] == value) idx = pos;
   auto edited = draw_combobox(
-      widgets, lbl, idx, (int)vals.size(),
+      widget, lbl, idx, (int)vals.size(),
       [&](int idx) { return vals[idx]->name; }, include_null);
   if (edited) {
     value = idx >= 0 ? vals[idx] : nullptr;
@@ -151,14 +151,14 @@ inline bool draw_combobox(gui_widgets* widgets, const char* lbl, T*& value,
 }
 
 template <typename T>
-inline bool draw_combobox(gui_widgets* widgets, const char* lbl, T*& value,
+inline bool draw_combobox(gui_widget* widget, const char* lbl, T*& value,
     const vector<T*>& vals, const vector<string>& labels,
     bool include_null = false) {
   auto idx = -1;
   for (auto pos = 0; pos < vals.size(); pos++)
     if (vals[pos] == value) idx = pos;
   auto edited = draw_combobox(
-      widgets, lbl, idx, (int)vals.size(), [&](int idx) { return labels[idx]; },
+      widget, lbl, idx, (int)vals.size(), [&](int idx) { return labels[idx]; },
       include_null);
   if (edited) {
     value = idx >= 0 ? vals[idx] : nullptr;
@@ -166,30 +166,30 @@ inline bool draw_combobox(gui_widgets* widgets, const char* lbl, T*& value,
   return edited;
 }
 
-void draw_progressbar(gui_widgets* widgets, const char* lbl, float fraction);
+void draw_progressbar(gui_widget* widget, const char* lbl, float fraction);
 void draw_progressbar(
-    gui_widgets* widgets, const char* lbl, int current, int total);
+    gui_widget* widget, const char* lbl, int current, int total);
 
 void draw_histogram(
-    gui_widgets* widgets, const char* lbl, const vector<float>& values);
+    gui_widget* widget, const char* lbl, const vector<float>& values);
 void draw_histogram(
-    gui_widgets* widgets, const char* lbl, const vector<vec2f>& values);
+    gui_widget* widget, const char* lbl, const vector<vec2f>& values);
 void draw_histogram(
-    gui_widgets* widgets, const char* lbl, const vector<vec3f>& values);
+    gui_widget* widget, const char* lbl, const vector<vec3f>& values);
 void draw_histogram(
-    gui_widgets* widgets, const char* lbl, const vector<vec4f>& values);
+    gui_widget* widget, const char* lbl, const vector<vec4f>& values);
 
-bool draw_filedialog(gui_widgets* widgets, const char* lbl, string& path,
+bool draw_filedialog(gui_widget* widget, const char* lbl, string& path,
     bool save, const string& dirname, const string& filename,
     const string& filter);
-bool draw_filedialog_button(gui_widgets* widgets, const char* button_lbl,
+bool draw_filedialog_button(gui_widget* widget, const char* button_lbl,
     bool button_active, const char* lbl, string& path, bool save,
     const string& dirname, const string& filename, const string& filter);
 
-void log_info(gui_widgets* widgets, const string& msg);
-void log_error(gui_widgets* widgets, const string& msg);
-void clear_log(gui_widgets* widgets);
-void draw_log(gui_widgets* widgets);
+void log_info(gui_widget* widget, const string& msg);
+void log_error(gui_widget* widget, const string& msg);
+void clear_log(gui_widget* widget);
+void draw_log(gui_widget* widget);
 
 }  // namespace yocto
 

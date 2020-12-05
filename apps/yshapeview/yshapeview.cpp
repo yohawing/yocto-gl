@@ -66,7 +66,7 @@ struct app_state {
   shade_scene*  glscene  = new shade_scene{};
   shade_camera* glcamera = nullptr;
 
-  gui_widgets widgets = {};
+  gui_widget* widget = new gui_widget{};
 
   // loading status
   std::atomic<bool> ok           = false;
@@ -205,55 +205,54 @@ void init_glscene(app_state* app, shade_scene* glscene, generic_shape* ioshape,
 }
 
 // draw with shading
-void draw_widgets(app_state* app, const gui_input& input) {
-  auto widgets = &app->widgets;
-  begin_imgui(widgets, "yshapeview", {0, 0}, {320, 720});
+void draw_widget(app_state* app, const gui_input& input) {
+  auto widget = app->widget;
+  begin_widget(widget, "yshapeview", {0, 0}, {320, 720});
 
-  if (begin_header(widgets, "view")) {
+  if (begin_header(widget, "view")) {
     auto  glmaterial = app->glscene->materials.front();
     auto& params     = app->drawgl_prms;
-    draw_checkbox(widgets, "faceted", params.faceted);
-    continue_line(widgets);
-    draw_checkbox(widgets, "lines", app->glscene->instances[1]->hidden, true);
-    continue_line(widgets);
-    draw_checkbox(widgets, "points", app->glscene->instances[2]->hidden, true);
-    draw_coloredit(widgets, "color", glmaterial->color);
-    draw_slider(widgets, "resolution", params.resolution, 0, 4096);
+    draw_checkbox(widget, "faceted", params.faceted);
+    continue_line(widget);
+    draw_checkbox(widget, "lines", app->glscene->instances[1]->hidden, true);
+    continue_line(widget);
+    draw_checkbox(widget, "points", app->glscene->instances[2]->hidden, true);
+    draw_coloredit(widget, "color", glmaterial->color);
+    draw_slider(widget, "resolution", params.resolution, 0, 4096);
     draw_combobox(
-        widgets, "lighting", (int&)params.lighting, shade_lighting_names);
-    draw_checkbox(widgets, "wireframe", params.wireframe);
-    continue_line(widgets);
-    draw_checkbox(widgets, "double sided", params.double_sided);
-    draw_slider(widgets, "exposure", params.exposure, -10, 10);
-    draw_slider(widgets, "gamma", params.gamma, 0.1f, 4);
-    draw_slider(widgets, "near", params.near, 0.01f, 1.0f);
-    draw_slider(widgets, "far", params.far, 1000.0f, 10000.0f);
-    end_header(widgets);
+        widget, "lighting", (int&)params.lighting, shade_lighting_names);
+    draw_checkbox(widget, "wireframe", params.wireframe);
+    continue_line(widget);
+    draw_checkbox(widget, "double sided", params.double_sided);
+    draw_slider(widget, "exposure", params.exposure, -10, 10);
+    draw_slider(widget, "gamma", params.gamma, 0.1f, 4);
+    draw_slider(widget, "near", params.near, 0.01f, 1.0f);
+    draw_slider(widget, "far", params.far, 1000.0f, 10000.0f);
+    end_header(widget);
   }
-  if (begin_header(widgets, "inspect")) {
-    draw_label(widgets, "shape", app->name);
-    draw_label(widgets, "filename", app->filename);
-    draw_label(widgets, "outname", app->outname);
-    draw_label(widgets, "imagename", app->imagename);
+  if (begin_header(widget, "inspect")) {
+    draw_label(widget, "shape", app->name);
+    draw_label(widget, "filename", app->filename);
+    draw_label(widget, "outname", app->outname);
+    draw_label(widget, "imagename", app->imagename);
     auto ioshape = app->ioshape;
-    draw_label(widgets, "points", std::to_string(ioshape->points.size()));
-    draw_label(widgets, "lines", std::to_string(ioshape->lines.size()));
-    draw_label(widgets, "triangles", std::to_string(ioshape->triangles.size()));
-    draw_label(widgets, "quads", std::to_string(ioshape->quads.size()));
-    draw_label(widgets, "positions", std::to_string(ioshape->positions.size()));
-    draw_label(widgets, "normals", std::to_string(ioshape->normals.size()));
-    draw_label(widgets, "texcoords", std::to_string(ioshape->texcoords.size()));
-    draw_label(widgets, "colors", std::to_string(ioshape->colors.size()));
-    draw_label(widgets, "radius", std::to_string(ioshape->radius.size()));
-    draw_label(widgets, "quads pos", std::to_string(ioshape->quadspos.size()));
-    draw_label(
-        widgets, "quads norm", std::to_string(ioshape->quadsnorm.size()));
-    draw_label(widgets, "quads texcoord",
+    draw_label(widget, "points", std::to_string(ioshape->points.size()));
+    draw_label(widget, "lines", std::to_string(ioshape->lines.size()));
+    draw_label(widget, "triangles", std::to_string(ioshape->triangles.size()));
+    draw_label(widget, "quads", std::to_string(ioshape->quads.size()));
+    draw_label(widget, "positions", std::to_string(ioshape->positions.size()));
+    draw_label(widget, "normals", std::to_string(ioshape->normals.size()));
+    draw_label(widget, "texcoords", std::to_string(ioshape->texcoords.size()));
+    draw_label(widget, "colors", std::to_string(ioshape->colors.size()));
+    draw_label(widget, "radius", std::to_string(ioshape->radius.size()));
+    draw_label(widget, "quads pos", std::to_string(ioshape->quadspos.size()));
+    draw_label(widget, "quads norm", std::to_string(ioshape->quadsnorm.size()));
+    draw_label(widget, "quads texcoord",
         std::to_string(ioshape->quadstexcoord.size()));
-    end_header(widgets);
+    end_header(widget);
   }
 
-  end_imgui(widgets);
+  end_widget(widget);
 }
 
 // draw with shape
@@ -263,7 +262,7 @@ void draw_scene(app_state* app, const gui_input& input) {
 }
 
 void update_camera(app_state* app, const gui_input& input) {
-  if (is_active(&app->widgets)) return;
+  if (is_active(app->widget)) return;
 
   // handle mouse and keyboard for navigation
   if ((input.mouse_left || input.mouse_right) && !input.modifier_alt) {
@@ -301,7 +300,7 @@ void update_app(const gui_input& input, void* data) {
   drop(app, input);
 
   draw_scene(app, input);
-  draw_widgets(app, input);
+  draw_widget(app, input);
 }
 
 int main(int argc, const char* argv[]) {
@@ -328,7 +327,7 @@ int main(int argc, const char* argv[]) {
   load_shape(app, filename);
   init_glscene(app, app->glscene, app->ioshape, {});
   app->glcamera = app->glscene->cameras.front();
-  app->widgets  = create_imgui(window);
+  init_widget(app->widget, window);
 
   run_ui(window, update_app);
 

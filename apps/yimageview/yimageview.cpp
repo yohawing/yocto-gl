@@ -94,7 +94,7 @@ struct app_states {
   colorgrade_params params   = {};
 
   // imgui
-  gui_widgets widgets = {};
+  gui_widget* widget = new gui_widget{};
 
   // cleanup
   ~app_states() {
@@ -159,18 +159,18 @@ void load_image_async(app_states* apps, const string& filename) {
   if (!apps->selected) apps->selected = apps->states.front();
 }
 
-void draw_widgets(app_states* apps, const gui_input& input) {
-  auto widgets = &apps->widgets;
-  begin_imgui(widgets, "yimageview");
+void draw_widget(app_states* apps, const gui_input& input) {
+  auto widget = apps->widget;
+  begin_widget(widget, "yimageview");
 
   static string load_path = "", save_path = "", error_message = "";
-  if (draw_filedialog_button(widgets, "load", true, "load image", load_path,
+  if (draw_filedialog_button(widget, "load", true, "load image", load_path,
           false, "./", "", "*.png;*.jpg;*.tga;*.bmp;*.hdr;*.exr")) {
     load_image_async(apps, load_path);
     load_path = "";
   }
-  continue_line(widgets);
-  if (draw_filedialog_button(widgets, "save",
+  continue_line(widget);
+  if (draw_filedialog_button(widget, "save",
           apps->selected && apps->selected->ok, "save image", save_path, true,
           path_dirname(save_path), path_filename(save_path),
           "*.png;*.jpg;*.tga;*.bmp;*.hdr;*.exr")) {
@@ -179,10 +179,10 @@ void draw_widgets(app_states* apps, const gui_input& input) {
     save_image(app->outname, app->display, app->error);
     save_path = "";
   }
-  continue_line(widgets);
-  if (draw_button(widgets, "close", (bool)apps->selected)) {
+  continue_line(widget);
+  if (draw_button(widget, "close", (bool)apps->selected)) {
     if (apps->selected->loader.valid()) {
-      end_imgui(widgets);
+      end_widget(widget);
       return;
     }
     delete apps->selected;
@@ -190,90 +190,90 @@ void draw_widgets(app_states* apps, const gui_input& input) {
         std::find(apps->states.begin(), apps->states.end(), apps->selected));
     apps->selected = apps->states.empty() ? nullptr : apps->states.front();
   }
-  continue_line(widgets);
-  if (draw_button(widgets, "quit")) {
-    set_close(widgets->window, true);
+  continue_line(widget);
+  if (draw_button(widget, "quit")) {
+    set_close(widget->window, true);
   }
-  draw_combobox(widgets, "image", apps->selected, apps->states, false);
+  draw_combobox(widget, "image", apps->selected, apps->states, false);
   if (!apps->selected) {
-    end_imgui(widgets);
+    end_widget(widget);
     return;
   }
   auto app = apps->selected;
-  if (app->status != "") draw_label(widgets, "status", app->status);
-  if (app->error != "") draw_label(widgets, "error", app->error);
+  if (app->status != "") draw_label(widget, "status", app->status);
+  if (app->error != "") draw_label(widget, "error", app->error);
   if (!app->ok) {
-    end_imgui(widgets);
+    end_widget(widget);
     return;
   }
-  if (begin_header(widgets, "tonemap")) {
+  if (begin_header(widget, "tonemap")) {
     auto edited = 0;
-    edited += draw_slider(widgets, "exposure", app->exposure, -5, 5);
-    edited += draw_checkbox(widgets, "filmic", app->filmic);
+    edited += draw_slider(widget, "exposure", app->exposure, -5, 5);
+    edited += draw_checkbox(widget, "filmic", app->filmic);
     if (edited) update_display(app);
-    end_header(widgets);
+    end_header(widget);
   }
-  if (begin_header(widgets, "colorgrade")) {
+  if (begin_header(widget, "colorgrade")) {
     auto& params = app->params;
     auto  edited = 0;
-    edited += draw_checkbox(widgets, "apply colorgrade", app->colorgrade);
-    edited += draw_slider(widgets, "exposure", params.exposure, -5, 5);
-    edited += draw_coloredit(widgets, "tint", params.tint);
-    edited += draw_slider(widgets, "lincontrast", params.lincontrast, 0, 1);
-    edited += draw_slider(widgets, "logcontrast", params.logcontrast, 0, 1);
-    edited += draw_slider(widgets, "linsaturation", params.linsaturation, 0, 1);
-    edited += draw_checkbox(widgets, "filmic", params.filmic);
-    continue_line(widgets);
-    edited += draw_checkbox(widgets, "srgb", params.srgb);
-    continue_line(widgets);
-    if (draw_button(widgets, "auto wb")) {
+    edited += draw_checkbox(widget, "apply colorgrade", app->colorgrade);
+    edited += draw_slider(widget, "exposure", params.exposure, -5, 5);
+    edited += draw_coloredit(widget, "tint", params.tint);
+    edited += draw_slider(widget, "lincontrast", params.lincontrast, 0, 1);
+    edited += draw_slider(widget, "logcontrast", params.logcontrast, 0, 1);
+    edited += draw_slider(widget, "linsaturation", params.linsaturation, 0, 1);
+    edited += draw_checkbox(widget, "filmic", params.filmic);
+    continue_line(widget);
+    edited += draw_checkbox(widget, "srgb", params.srgb);
+    continue_line(widget);
+    if (draw_button(widget, "auto wb")) {
       auto wb     = 1 / xyz(app->source_stats.average);
       params.tint = wb / max(wb);
       edited += 1;
     }
-    edited += draw_slider(widgets, "contrast", params.contrast, 0, 1);
-    edited += draw_slider(widgets, "saturation", params.saturation, 0, 1);
-    edited += draw_slider(widgets, "shadows", params.shadows, 0, 1);
-    edited += draw_slider(widgets, "midtones", params.midtones, 0, 1);
-    edited += draw_slider(widgets, "highlights", params.highlights, 0, 1);
-    edited += draw_coloredit(widgets, "shadows color", params.shadows_color);
-    edited += draw_coloredit(widgets, "midtones color", params.midtones_color);
+    edited += draw_slider(widget, "contrast", params.contrast, 0, 1);
+    edited += draw_slider(widget, "saturation", params.saturation, 0, 1);
+    edited += draw_slider(widget, "shadows", params.shadows, 0, 1);
+    edited += draw_slider(widget, "midtones", params.midtones, 0, 1);
+    edited += draw_slider(widget, "highlights", params.highlights, 0, 1);
+    edited += draw_coloredit(widget, "shadows color", params.shadows_color);
+    edited += draw_coloredit(widget, "midtones color", params.midtones_color);
     edited += draw_coloredit(
-        widgets, "highlights color", params.highlights_color);
+        widget, "highlights color", params.highlights_color);
     if (edited) update_display(app);
-    end_header(widgets);
+    end_header(widget);
   }
-  if (begin_header(widgets, "inspect")) {
-    draw_label(widgets, "image", app->name);
-    draw_label(widgets, "filename", app->filename);
-    draw_label(widgets, "outname", app->outname);
-    draw_label(widgets, "image",
+  if (begin_header(widget, "inspect")) {
+    draw_label(widget, "image", app->name);
+    draw_label(widget, "filename", app->filename);
+    draw_label(widget, "outname", app->outname);
+    draw_label(widget, "image",
         std::to_string(app->source.width()) + " x " +
             std::to_string(app->source.height()));
-    draw_slider(widgets, "zoom", app->glparams.scale, 0.1, 10);
-    draw_checkbox(widgets, "fit", app->glparams.fit);
+    draw_slider(widget, "zoom", app->glparams.scale, 0.1, 10);
+    draw_checkbox(widget, "fit", app->glparams.fit);
     auto ij = image_coords(input.mouse_pos, app->glparams.center,
         app->glparams.scale, app->source.imsize());
-    draw_dragger(widgets, "mouse", ij);
+    draw_dragger(widget, "mouse", ij);
     auto img_pixel = zero4f, display_pixel = zero4f;
     if (ij.x >= 0 && ij.x < app->source.width() && ij.y >= 0 &&
         ij.y < app->source.height()) {
       img_pixel     = app->source[{ij.x, ij.y}];
       display_pixel = app->display[{ij.x, ij.y}];
     }
-    draw_coloredit(widgets, "image", img_pixel);
-    draw_dragger(widgets, "display", display_pixel);
-    draw_dragger(widgets, "image min", app->source_stats.min);
-    draw_dragger(widgets, "image max", app->source_stats.max);
-    draw_dragger(widgets, "image avg", app->source_stats.average);
-    draw_histogram(widgets, "image histo", app->source_stats.histogram);
-    draw_dragger(widgets, "display min", app->display_stats.min);
-    draw_dragger(widgets, "display max", app->display_stats.max);
-    draw_dragger(widgets, "display avg", app->display_stats.average);
-    draw_histogram(widgets, "display histo", app->display_stats.histogram);
-    end_header(widgets);
+    draw_coloredit(widget, "image", img_pixel);
+    draw_dragger(widget, "display", display_pixel);
+    draw_dragger(widget, "image min", app->source_stats.min);
+    draw_dragger(widget, "image max", app->source_stats.max);
+    draw_dragger(widget, "image avg", app->source_stats.average);
+    draw_histogram(widget, "image histo", app->source_stats.histogram);
+    draw_dragger(widget, "display min", app->display_stats.min);
+    draw_dragger(widget, "display max", app->display_stats.max);
+    draw_dragger(widget, "display avg", app->display_stats.average);
+    draw_histogram(widget, "display histo", app->display_stats.histogram);
+    end_header(widget);
   }
-  end_imgui(widgets);
+  end_widget(widget);
 }
 
 void draw_image(app_states* apps, const gui_input& input) {
@@ -315,7 +315,7 @@ void update(app_states* apps) {
 }
 
 void update_view(app_states* apps, const gui_input& input) {
-  if (is_active(&apps->widgets)) return;
+  if (is_active(apps->widget)) return;
 
   if (!apps->selected) return;
   auto app = apps->selected;
@@ -340,7 +340,7 @@ void update_app(const gui_input& input, void* data) {
   update_view(apps, input);
   update(apps);
   draw_image(apps, input);
-  draw_widgets(apps, input);
+  draw_widget(apps, input);
 }
 
 int main(int argc, const char* argv[]) {
@@ -360,7 +360,7 @@ int main(int argc, const char* argv[]) {
   auto window = new gui_window{};
   init_window(window, {1280 + 320, 720}, "yimageviews", true);
   window->user_data = apps;
-  apps->widgets     = create_imgui(window);
+  init_widget(apps->widget, window);
 
   // run ui
   run_ui(window, update_app);

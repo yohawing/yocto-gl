@@ -56,7 +56,7 @@ struct app_state {
   ogl_image_params glparams = {};
 
   // imgui
-  gui_widgets widgets = {};
+  gui_widget* widget = new gui_widget{};
 
   ~app_state() {
     if (glimage) delete glimage;
@@ -85,64 +85,64 @@ void draw_image(app_state* app, const gui_input& input) {
   draw_image(app->glimage, app->glparams);
 }
 
-auto draw_widgets(app_state* app, const gui_input& input) {
-  auto widgets = &app->widgets;
-  begin_imgui(widgets, "yimageviews");
+auto draw_widget(app_state* app, const gui_input& input) {
+  auto widget = app->widget;
+  begin_widget(widget, "yimageviews");
 
   auto edited = 0;
-  if (begin_header(widgets, "tonemap")) {
-    edited += draw_slider(widgets, "exposure", app->exposure, -5, 5);
-    edited += draw_checkbox(widgets, "filmic", app->filmic);
-    end_header(widgets);
+  if (begin_header(widget, "tonemap")) {
+    edited += draw_slider(widget, "exposure", app->exposure, -5, 5);
+    edited += draw_checkbox(widget, "filmic", app->filmic);
+    end_header(widget);
   }
-  if (begin_header(widgets, "colorgrade")) {
+  if (begin_header(widget, "colorgrade")) {
     auto& params = app->params;
-    edited += draw_checkbox(widgets, "apply colorgrade", app->colorgrade);
-    edited += draw_slider(widgets, "exposure", params.exposure, -5, 5);
-    edited += draw_coloredit(widgets, "tint", params.tint);
-    edited += draw_slider(widgets, "lincontrast", params.lincontrast, 0, 1);
-    edited += draw_slider(widgets, "logcontrast", params.logcontrast, 0, 1);
-    edited += draw_slider(widgets, "linsaturation", params.linsaturation, 0, 1);
-    edited += draw_checkbox(widgets, "filmic", params.filmic);
-    continue_line(widgets);
-    edited += draw_checkbox(widgets, "srgb", params.srgb);
-    edited += draw_slider(widgets, "contrast", params.contrast, 0, 1);
-    edited += draw_slider(widgets, "saturation", params.saturation, 0, 1);
-    edited += draw_slider(widgets, "shadows", params.shadows, 0, 1);
-    edited += draw_slider(widgets, "midtones", params.midtones, 0, 1);
-    edited += draw_slider(widgets, "highlights", params.highlights, 0, 1);
-    edited += draw_coloredit(widgets, "shadows color", params.shadows_color);
-    edited += draw_coloredit(widgets, "midtones color", params.midtones_color);
+    edited += draw_checkbox(widget, "apply colorgrade", app->colorgrade);
+    edited += draw_slider(widget, "exposure", params.exposure, -5, 5);
+    edited += draw_coloredit(widget, "tint", params.tint);
+    edited += draw_slider(widget, "lincontrast", params.lincontrast, 0, 1);
+    edited += draw_slider(widget, "logcontrast", params.logcontrast, 0, 1);
+    edited += draw_slider(widget, "linsaturation", params.linsaturation, 0, 1);
+    edited += draw_checkbox(widget, "filmic", params.filmic);
+    continue_line(widget);
+    edited += draw_checkbox(widget, "srgb", params.srgb);
+    edited += draw_slider(widget, "contrast", params.contrast, 0, 1);
+    edited += draw_slider(widget, "saturation", params.saturation, 0, 1);
+    edited += draw_slider(widget, "shadows", params.shadows, 0, 1);
+    edited += draw_slider(widget, "midtones", params.midtones, 0, 1);
+    edited += draw_slider(widget, "highlights", params.highlights, 0, 1);
+    edited += draw_coloredit(widget, "shadows color", params.shadows_color);
+    edited += draw_coloredit(widget, "midtones color", params.midtones_color);
     edited += draw_coloredit(
-        widgets, "highlights color", params.highlights_color);
-    end_header(widgets);
+        widget, "highlights color", params.highlights_color);
+    end_header(widget);
   }
-  if (begin_header(widgets, "inspect")) {
-    draw_slider(widgets, "zoom", app->glparams.scale, 0.1, 10);
-    draw_checkbox(widgets, "fit", app->glparams.fit);
+  if (begin_header(widget, "inspect")) {
+    draw_slider(widget, "zoom", app->glparams.scale, 0.1, 10);
+    draw_checkbox(widget, "fit", app->glparams.fit);
     auto ij = image_coords(input.mouse_pos, app->glparams.center,
         app->glparams.scale, app->source.imsize());
-    draw_dragger(widgets, "mouse", ij);
+    draw_dragger(widget, "mouse", ij);
     auto img_pixel = zero4f, display_pixel = zero4f;
     if (ij.x >= 0 && ij.x < app->source.width() && ij.y >= 0 &&
         ij.y < app->source.height()) {
       img_pixel     = app->source[{ij.x, ij.y}];
       display_pixel = app->display[{ij.x, ij.y}];
     }
-    draw_coloredit(widgets, "image", img_pixel);
-    draw_dragger(widgets, "display", display_pixel);
-    end_header(widgets);
+    draw_coloredit(widget, "image", img_pixel);
+    draw_dragger(widget, "display", display_pixel);
+    end_header(widget);
   }
   if (edited) {
     update_display(app);
     if (!is_initialized(app->glimage)) init_image(app->glimage);
     set_image(app->glimage, app->display, false, false);
   }
-  end_imgui(widgets);
+  end_widget(widget);
 };
 
 auto update_view(app_state* app, const gui_input& input) {
-  if (is_active(&app->widgets)) return;
+  if (is_active(app->widget)) return;
   // handle mouse
   if (input.mouse_left) {
     app->glparams.center += input.mouse_pos - input.mouse_last;
@@ -157,7 +157,7 @@ void update_app(const gui_input& input, void* data) {
   auto app = (app_state*)data;
   update_view(app, input);
   draw_image(app, input);
-  draw_widgets(app, input);
+  draw_widget(app, input);
 }
 
 int main(int argc, const char* argv[]) {
@@ -185,7 +185,7 @@ int main(int argc, const char* argv[]) {
   auto window = new gui_window{};
   init_window(window, {1280 + 320, 720}, "yimageviews", true);
   window->user_data = app;
-  app->widgets      = create_imgui(window);
+  init_widget(app->widget, window);
 
   // run ui
   run_ui(window, update_app);
