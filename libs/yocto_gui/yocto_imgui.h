@@ -68,7 +68,7 @@ bool begin_widget(gui_widget* widget, const string& name,
     const vec2i& position = {0, 0}, const vec2i& size = {320, 720});
 void end_widget(gui_widget* widget);
 
-bool is_active(gui_widget* widget);
+bool is_active(const gui_widget* widget);
 
 bool begin_header(gui_widget* widget, const char* title);
 void end_header(gui_widget* widget);

@@ -112,7 +112,7 @@ void end_widget(gui_widget* widget) {
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
 
-bool is_active(gui_widget* widget) {
+bool is_active(const gui_widget* widget) {
   auto io = &ImGui::GetIO();
   return io->WantTextInput || io->WantCaptureMouse || io->WantCaptureKeyboard;
 }
