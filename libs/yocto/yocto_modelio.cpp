@@ -845,8 +845,8 @@ bool get_list_values(ply_model* ply, const string& element,
   return convert_property<int>(prop, values);
 }
 
-inline vector<vec2f> flip_ply_texcoord(const vector<vec2f>& texcoords) {
-  auto flipped = texcoords;
+inline vector<vec2f> flip_ply_texcoord(const view<vec2f>& texcoords) {
+  auto flipped = copy(texcoords);
   for (auto& uv : flipped) uv.y = 1 - uv.y;
   return flipped;
 }
@@ -1022,65 +1022,65 @@ inline bool add_values(ply_model* ply, const int* values, size_t count,
 }
 
 bool add_value(ply_model* ply, const string& element, const string& property,
-    const vector<float>& values) {
+    const view<float>& values) {
   if (values.empty()) return false;
   auto properties = vector{property};
   return add_values(
       ply, values.data(), values.size(), element, properties.data(), 1);
 }
 bool add_values(ply_model* ply, const string& element,
-    const array<string, 2>& properties, const vector<vec2f>& values) {
+    const array<string, 2>& properties, const view<vec2f>& values) {
   if (values.empty()) return false;
   return add_values(
       ply, &values.front().x, values.size(), element, properties.data(), 2);
 }
 bool add_values(ply_model* ply, const string& element,
-    const array<string, 3>& properties, const vector<vec3f>& values) {
+    const array<string, 3>& properties, const view<vec3f>& values) {
   if (values.empty()) return false;
   return add_values(
       ply, &values.front().x, values.size(), element, properties.data(), 3);
 }
 bool add_values(ply_model* ply, const string& element,
-    const array<string, 4>& properties, const vector<vec4f>& values) {
+    const array<string, 4>& properties, const view<vec4f>& values) {
   if (values.empty()) return false;
   return add_values(
       ply, &values.front().x, values.size(), element, properties.data(), 4);
 }
 bool add_values(ply_model* ply, const string& element,
-    const array<string, 12>& properties, const vector<frame3f>& values) {
+    const array<string, 12>& properties, const view<frame3f>& values) {
   if (values.empty()) return false;
   return add_values(ply, &values.front().x.x, values.size(), element,
       properties.data(), (int)properties.size());
 }
 
 bool add_value(ply_model* ply, const string& element, const string& property,
-    const vector<int>& values) {
+    const view<int>& values) {
   if (values.empty()) return false;
   auto properties = vector{property};
   return add_values(
       ply, values.data(), values.size(), element, properties.data(), 1);
 }
 bool add_values(ply_model* ply, const string& element,
-    const array<string, 2>& properties, const vector<vec2i>& values) {
+    const array<string, 2>& properties, const view<vec2i>& values) {
   if (values.empty()) return false;
   return add_values(
       ply, &values.front().x, values.size(), element, properties.data(), 2);
 }
 bool add_values(ply_model* ply, const string& element,
-    const array<string, 3>& properties, const vector<vec3i>& values) {
+    const array<string, 3>& properties, const view<vec3i>& values) {
   if (values.empty()) return false;
   return add_values(
       ply, &values.front().x, values.size(), element, properties.data(), 3);
 }
 bool add_values(ply_model* ply, const string& element,
-    const array<string, 4>& properties, const vector<vec4i>& values) {
+    const array<string, 4>& properties, const view<vec4i>& values) {
   if (values.empty()) return false;
   return add_values(
       ply, &values.front().x, values.size(), element, properties.data(), 4);
 }
 
 bool add_lists(ply_model* ply, const string& element, const string& property,
-    const vector<vector<int>>& values) {
+    const view<vector<int>>& values) {
   if (values.empty()) return false;
   if (add_property(ply, element, property, values.size(), ply_type::i32,
           true) == nullptr)
@@ -1095,14 +1095,14 @@ bool add_lists(ply_model* ply, const string& element, const string& property,
   return true;
 }
 bool add_lists(ply_model* ply, const string& element, const string& property,
-    const vector<byte>& sizes, const vector<int>& values) {
+    const view<byte>& sizes, const view<int>& values) {
   if (values.empty()) return false;
   if (add_property(ply, element, property, sizes.size(), ply_type::i32, true) ==
       nullptr)
     return false;
   auto prop      = get_property(ply, element, property);
-  prop->data_i32 = values;
-  prop->ldata_u8 = sizes;
+  prop->data_i32 = copy(values);
+  prop->ldata_u8 = copy(sizes);
   return true;
 }
 bool add_lists(ply_model* ply, const int* values, size_t count, int size,
@@ -1117,51 +1117,51 @@ bool add_lists(ply_model* ply, const int* values, size_t count, int size,
   return true;
 }
 bool add_lists(ply_model* ply, const string& element, const string& property,
-    const vector<int>& values) {
+    const view<int>& values) {
   if (values.empty()) return false;
   return add_lists(ply, values.data(), values.size(), 1, element, property);
 }
 bool add_lists(ply_model* ply, const string& element, const string& property,
-    const vector<vec2i>& values) {
+    const view<vec2i>& values) {
   if (values.empty()) return false;
   return add_lists(ply, &values.front().x, values.size(), 2, element, property);
 }
 bool add_lists(ply_model* ply, const string& element, const string& property,
-    const vector<vec3i>& values) {
+    const view<vec3i>& values) {
   if (values.empty()) return false;
   return add_lists(ply, &values.front().x, values.size(), 3, element, property);
 }
 bool add_lists(ply_model* ply, const string& element, const string& property,
-    const vector<vec4i>& values) {
+    const view<vec4i>& values) {
   if (values.empty()) return false;
   return add_lists(ply, &values.front().x, values.size(), 4, element, property);
 }
 
 // Add ply properties for meshes
-bool add_positions(ply_model* ply, const vector<vec3f>& values) {
+bool add_positions(ply_model* ply, const view<vec3f>& values) {
   return add_values(ply, "vertex", {"x", "y", "z"}, values);
 }
-bool add_normals(ply_model* ply, const vector<vec3f>& values) {
+bool add_normals(ply_model* ply, const view<vec3f>& values) {
   return add_values(ply, "vertex", {"nx", "ny", "nz"}, values);
 }
-bool add_texcoords(ply_model* ply, const vector<vec2f>& values, bool flipv) {
+bool add_texcoords(ply_model* ply, const view<vec2f>& values, bool flipv) {
   return add_values(
       ply, "vertex", {"u", "v"}, flipv ? flip_ply_texcoord(values) : values);
 }
-bool add_colors(ply_model* ply, const vector<vec3f>& values) {
+bool add_colors(ply_model* ply, const view<vec3f>& values) {
   return add_values(ply, "vertex", {"red", "green", "blue"}, values);
 }
-bool add_colors(ply_model* ply, const vector<vec4f>& values) {
+bool add_colors(ply_model* ply, const view<vec4f>& values) {
   return add_values(ply, "vertex", {"red", "green", "blue", "alpha"}, values);
 }
-bool add_radius(ply_model* ply, const vector<float>& values) {
+bool add_radius(ply_model* ply, const view<float>& values) {
   return add_value(ply, "vertex", "radius", values);
 }
-bool add_faces(ply_model* ply, const vector<vector<int>>& values) {
+bool add_faces(ply_model* ply, const view<vector<int>>& values) {
   return add_lists(ply, "face", "vertex_indices", values);
 }
-bool add_faces(ply_model* ply, const vector<vec3i>& triangles,
-    const vector<vec4i>& quads) {
+bool add_faces(
+    ply_model* ply, const view<vec3i>& triangles, const view<vec4i>& quads) {
   if (triangles.empty() && quads.empty()) return false;
   if (quads.empty()) {
     return add_lists(ply, "face", "vertex_indices", triangles);
@@ -1190,16 +1190,16 @@ bool add_faces(ply_model* ply, const vector<vec3i>& triangles,
     return add_lists(ply, "face", "vertex_indices", sizes, indices);
   }
 }
-bool add_triangles(ply_model* ply, const vector<vec3i>& values) {
+bool add_triangles(ply_model* ply, const view<vec3i>& values) {
   return add_faces(ply, values, {});
 }
-bool add_quads(ply_model* ply, const vector<vec4i>& values) {
+bool add_quads(ply_model* ply, const view<vec4i>& values) {
   return add_faces(ply, {}, values);
 }
-bool add_lines(ply_model* ply, const vector<vec2i>& values) {
+bool add_lines(ply_model* ply, const view<vec2i>& values) {
   return add_lists(ply, "line", "vertex_indices", values);
 }
-bool add_points(ply_model* ply, const vector<int>& values) {
+bool add_points(ply_model* ply, const view<int>& values) {
   return add_lists(ply, "point", "vertex_indices", values);
 }
 
@@ -2180,8 +2180,8 @@ void get_vertices(const obj_shape* shape, vector<vec3f>& positions,
     for (auto& texcoord : texcoords) texcoord.y = 1 - texcoord.y;
   }
 }
-inline vector<vec2f> flip_obj_texcoord(const vector<vec2f>& texcoord) {
-  auto flipped = texcoord;
+inline vector<vec2f> flip_obj_texcoord(const view<vec2f>& texcoord) {
+  auto flipped = copy(texcoord);
   for (auto& uv : flipped) uv.y = 1 - uv.y;
   return flipped;
 }
@@ -2460,12 +2460,12 @@ void get_points(const obj_shape* shape, int material, vector<int>& points,
 }
 
 // Add obj shape
-void set_triangles(obj_shape* shape, const vector<vec3i>& triangles,
-    const vector<vec3f>& positions, const vector<vec3f>& normals,
-    const vector<vec2f>& texcoords, const vector<int>& ematerials, bool flipv) {
-  shape->positions = positions;
-  shape->normals   = normals;
-  shape->texcoords = flipv ? flip_obj_texcoord(texcoords) : texcoords;
+void set_triangles(obj_shape* shape, const view<vec3i>& triangles,
+    const view<vec3f>& positions, const view<vec3f>& normals,
+    const view<vec2f>& texcoords, const view<int>& ematerials, bool flipv) {
+  shape->positions = copy(positions);
+  shape->normals   = copy(normals);
+  shape->texcoords = flipv ? flip_obj_texcoord(texcoords) : copy(texcoords);
   shape->vertices.reserve(triangles.size() * 3);
   for (auto idx = 0; idx < triangles.size(); idx++) {
     auto& triangle = triangles[idx];
@@ -2480,12 +2480,12 @@ void set_triangles(obj_shape* shape, const vector<vec3i>& triangles,
         {3, ematerials.empty() ? (uint8_t)0 : (uint8_t)ematerials[idx]});
   }
 }
-void set_quads(obj_shape* shape, const vector<vec4i>& quads,
-    const vector<vec3f>& positions, const vector<vec3f>& normals,
-    const vector<vec2f>& texcoords, const vector<int>& ematerials, bool flipv) {
-  shape->positions = positions;
-  shape->normals   = normals;
-  shape->texcoords = flipv ? flip_obj_texcoord(texcoords) : texcoords;
+void set_quads(obj_shape* shape, const view<vec4i>& quads,
+    const view<vec3f>& positions, const view<vec3f>& normals,
+    const view<vec2f>& texcoords, const view<int>& ematerials, bool flipv) {
+  shape->positions = copy(positions);
+  shape->normals   = copy(normals);
+  shape->texcoords = flipv ? flip_obj_texcoord(texcoords) : copy(texcoords);
   shape->vertices.reserve(quads.size() * 4);
   for (auto idx = 0; idx < quads.size(); idx++) {
     auto& quad = quads[idx];
@@ -2501,12 +2501,12 @@ void set_quads(obj_shape* shape, const vector<vec4i>& quads,
         ematerials.empty() ? (uint8_t)0 : (uint8_t)ematerials[idx]});
   }
 }
-void set_lines(obj_shape* shape, const vector<vec2i>& lines,
-    const vector<vec3f>& positions, const vector<vec3f>& normals,
-    const vector<vec2f>& texcoords, const vector<int>& ematerials, bool flipv) {
-  shape->positions = positions;
-  shape->normals   = normals;
-  shape->texcoords = flipv ? flip_obj_texcoord(texcoords) : texcoords;
+void set_lines(obj_shape* shape, const view<vec2i>& lines,
+    const view<vec3f>& positions, const view<vec3f>& normals,
+    const view<vec2f>& texcoords, const view<int>& ematerials, bool flipv) {
+  shape->positions = copy(positions);
+  shape->normals   = copy(normals);
+  shape->texcoords = flipv ? flip_obj_texcoord(texcoords) : copy(texcoords);
   shape->vertices.reserve(lines.size() * 2);
   for (auto idx = 0; idx < lines.size(); idx++) {
     auto& str = lines[idx];
@@ -2521,12 +2521,12 @@ void set_lines(obj_shape* shape, const vector<vec2i>& lines,
         {2, ematerials.empty() ? (uint8_t)0 : (uint8_t)ematerials[idx]});
   }
 }
-void set_points(obj_shape* shape, const vector<int>& points,
-    const vector<vec3f>& positions, const vector<vec3f>& normals,
-    const vector<vec2f>& texcoords, const vector<int>& ematerials, bool flipv) {
-  shape->positions = positions;
-  shape->normals   = normals;
-  shape->texcoords = flipv ? flip_obj_texcoord(texcoords) : texcoords;
+void set_points(obj_shape* shape, const view<int>& points,
+    const view<vec3f>& positions, const view<vec3f>& normals,
+    const view<vec2f>& texcoords, const view<int>& ematerials, bool flipv) {
+  shape->positions = copy(positions);
+  shape->normals   = copy(normals);
+  shape->texcoords = flipv ? flip_obj_texcoord(texcoords) : copy(texcoords);
   shape->vertices.reserve(points.size());
   for (auto idx = 0; idx < points.size(); idx++) {
     auto& point = points[idx];
@@ -2539,13 +2539,13 @@ void set_points(obj_shape* shape, const vector<int>& points,
         {1, ematerials.empty() ? (uint8_t)0 : (uint8_t)ematerials[idx]});
   }
 }
-void set_fvquads(obj_shape* shape, const vector<vec4i>& quadspos,
-    const vector<vec4i>& quadsnorm, const vector<vec4i>& quadstexcoord,
-    const vector<vec3f>& positions, const vector<vec3f>& normals,
-    const vector<vec2f>& texcoords, const vector<int>& ematerials, bool flipv) {
-  shape->positions = positions;
-  shape->normals   = normals;
-  shape->texcoords = flipv ? flip_obj_texcoord(texcoords) : texcoords;
+void set_fvquads(obj_shape* shape, const view<vec4i>& quadspos,
+    const view<vec4i>& quadsnorm, const view<vec4i>& quadstexcoord,
+    const view<vec3f>& positions, const view<vec3f>& normals,
+    const view<vec2f>& texcoords, const view<int>& ematerials, bool flipv) {
+  shape->positions = copy(positions);
+  shape->normals   = copy(normals);
+  shape->texcoords = flipv ? flip_obj_texcoord(texcoords) : copy(texcoords);
   shape->vertices.reserve(quadspos.size() * 4);
   for (auto idx = 0; idx < quadspos.size(); idx++) {
     auto nv = quadspos[idx].z == quadspos[idx].w ? 3 : 4;
@@ -2560,11 +2560,11 @@ void set_fvquads(obj_shape* shape, const vector<vec4i>& quadspos,
         ematerials.empty() ? (uint8_t)0 : (uint8_t)ematerials[idx]});
   }
 }
-void set_materials(obj_shape* shape, const vector<string>& materials) {
-  shape->materials = materials;
+void set_materials(obj_shape* shape, const view<string>& materials) {
+  shape->materials = copy(materials);
 }
-void set_instances(obj_shape* shape, const vector<frame3f>& instances) {
-  shape->instances = instances;
+void set_instances(obj_shape* shape, const view<frame3f>& instances) {
+  shape->instances = copy(instances);
 }
 
 }  // namespace yocto
@@ -2877,12 +2877,12 @@ bool get_triangles(const stl_model* stl, int shape_id, vector<vec3i>& triangles,
   fnormals   = shape->fnormals;
   return true;
 }
-void add_triangles(stl_model* stl, const vector<vec3i>& triangles,
-    const vector<vec3f>& positions, const vector<vec3f>& fnormals) {
+void add_triangles(stl_model* stl, const view<vec3i>& triangles,
+    const view<vec3f>& positions, const view<vec3f>& fnormals) {
   auto shape       = stl->shapes.emplace_back(new stl_shape{});
-  shape->triangles = triangles;
-  shape->positions = positions;
-  shape->fnormals  = fnormals;
+  shape->triangles = copy(triangles);
+  shape->positions = copy(positions);
+  shape->fnormals  = copy(fnormals);
 }
 
 }  // namespace yocto
@@ -3076,7 +3076,7 @@ inline bool get_pbrt_value(const pbrt_value& pbrt, pair<vec3f, string>& val) {
 }
 template <typename T>
 inline bool get_pbrt_value(
-    const vector<pbrt_value>& pbrt, const string& name, T& val) {
+    const view<pbrt_value>& pbrt, const string& name, T& val) {
   for (auto& p : pbrt) {
     if (p.name == name) {
       return get_pbrt_value(p, val);
@@ -3134,23 +3134,23 @@ inline pbrt_value make_pbrt_value(
   pbrt.value3f = val;
   return pbrt;
 }
-inline pbrt_value make_pbrt_value(const string& name, const vector<vec2f>& val,
+inline pbrt_value make_pbrt_value(const string& name, const view<vec2f>& val,
     pbrt_type type = pbrt_type::point2) {
   auto pbrt     = pbrt_value{};
   pbrt.name     = name;
   pbrt.type     = type;
-  pbrt.vector2f = val;
+  pbrt.vector2f = copy(val);
   return pbrt;
 }
-inline pbrt_value make_pbrt_value(const string& name, const vector<vec3f>& val,
+inline pbrt_value make_pbrt_value(const string& name, const view<vec3f>& val,
     pbrt_type type = pbrt_type::point) {
   auto pbrt     = pbrt_value{};
   pbrt.name     = name;
   pbrt.type     = type;
-  pbrt.vector3f = val;
+  pbrt.vector3f = copy(val);
   return pbrt;
 }
-inline pbrt_value make_pbrt_value(const string& name, const vector<vec3i>& val,
+inline pbrt_value make_pbrt_value(const string& name, const view<vec3i>& val,
     pbrt_type type = pbrt_type::integer) {
   auto pbrt     = pbrt_value{};
   pbrt.name     = name;
@@ -3796,7 +3796,7 @@ inline bool convert_material(pbrt_material*     pmaterial,
   };
 
   // helpers
-  auto get_texture = [&](const vector<pbrt_value>& values, const string& name,
+  auto get_texture = [&](const view<pbrt_value>& values, const string& name,
                          vec3f& color, string& filename,
                          const vec3f& def) -> bool {
     auto textured = pair{def, ""s};
@@ -3816,7 +3816,7 @@ inline bool convert_material(pbrt_material*     pmaterial,
     }
     return true;
   };
-  auto get_scalar = [&](const vector<pbrt_value>& values, const string& name,
+  auto get_scalar = [&](const view<pbrt_value>& values, const string& name,
                         float& scalar, float def) -> bool {
     auto textured = pair{vec3f{def, def, def}, ""s};
     if (!get_pbrt_value(values, name, textured)) return parse_error();
@@ -3832,7 +3832,7 @@ inline bool convert_material(pbrt_material*     pmaterial,
     }
     return true;
   };
-  auto get_color = [&](const vector<pbrt_value>& values, const string& name,
+  auto get_color = [&](const view<pbrt_value>& values, const string& name,
                        vec3f& color, const vec3f& def) -> bool {
     auto textured = pair{def, ""s};
     if (!get_pbrt_value(values, name, textured)) return parse_error();
@@ -3849,7 +3849,7 @@ inline bool convert_material(pbrt_material*     pmaterial,
     return true;
   };
 
-  auto get_roughness = [&](const vector<pbrt_value>& values, float& roughness,
+  auto get_roughness = [&](const view<pbrt_value>& values, float& roughness,
                            float def = 0.1) -> bool {
     auto roughness_ = pair{vec3f{def, def, def}, ""s};
     if (!get_pbrt_value(values, "roughness", roughness_)) return parse_error();
@@ -4192,7 +4192,7 @@ inline bool convert_shape(pbrt_shape* shape, const pbrt_command& command,
   };
 
   // helpers
-  auto get_alpha = [&](const vector<pbrt_value>& values, const string& name,
+  auto get_alpha = [&](const view<pbrt_value>& values, const string& name,
                        string& filename) -> bool {
     auto def      = 1.0f;
     auto textured = pair{def, ""s};
@@ -4825,7 +4825,7 @@ inline void format_value(string& str, const pbrt_value& value) {
   }
 }
 
-inline void format_value(string& str, const vector<pbrt_value>& values) {
+inline void format_value(string& str, const view<pbrt_value>& values) {
   for (auto& value : values) {
     str += " ";
     format_value(str, value);

@@ -43,6 +43,7 @@
 #include <string>
 #include <vector>
 
+#include "yocto_common.h"
 #include "yocto_math.h"
 
 // -----------------------------------------------------------------------------
@@ -155,53 +156,53 @@ bool has_quads(ply_model* ply);
 
 // Add ply properties
 bool add_value(ply_model* ply, const string& element, const string& property,
-    const vector<float>& values);
+    const view<float>& values);
 bool add_values(ply_model* ply, const string& element,
-    const array<string, 2>& properties, const vector<vec2f>& values);
+    const array<string, 2>& properties, const view<vec2f>& values);
 bool add_values(ply_model* ply, const string& element,
-    const array<string, 3>& properties, const vector<vec3f>& values);
+    const array<string, 3>& properties, const view<vec3f>& values);
 bool add_values(ply_model* ply, const string& element,
-    const array<string, 4>& properties, const vector<vec4f>& values);
+    const array<string, 4>& properties, const view<vec4f>& values);
 bool add_values(ply_model* ply, const string& element,
-    const array<string, 12>& properties, const vector<frame3f>& values);
+    const array<string, 12>& properties, const view<frame3f>& values);
 
 bool add_value(ply_model* ply, const string& element, const string& property,
-    const vector<int>& values);
+    const view<int>& values);
 bool add_values(ply_model* ply, const string& element,
-    const array<string, 2>& properties, const vector<vec2i>& values);
+    const array<string, 2>& properties, const view<vec2i>& values);
 bool add_values(ply_model* ply, const string& element,
-    const array<string, 3>& properties, const vector<vec3i>& values);
+    const array<string, 3>& properties, const view<vec3i>& values);
 bool add_values(ply_model* ply, const string& element,
-    const array<string, 4>& properties, const vector<vec4i>& values);
+    const array<string, 4>& properties, const view<vec4i>& values);
 
 bool add_lists(ply_model* ply, const string& element, const string& property,
-    const vector<vector<int>>& values);
+    const view<vector<int>>& values);
 bool add_lists(ply_model* ply, const string& element, const string& property,
-    const vector<byte>& sizes, const vector<int>& values);
+    const view<byte>& sizes, const view<int>& values);
 bool add_lists(ply_model* ply, const string& element, const string& property,
-    const vector<int>& values);
+    const view<int>& values);
 bool add_lists(ply_model* ply, const string& element, const string& property,
-    const vector<vec2i>& values);
+    const view<vec2i>& values);
 bool add_lists(ply_model* ply, const string& element, const string& property,
-    const vector<vec3i>& values);
+    const view<vec3i>& values);
 bool add_lists(ply_model* ply, const string& element, const string& property,
-    const vector<vec4i>& values);
+    const view<vec4i>& values);
 
 // Add ply properties for meshes
-bool add_positions(ply_model* ply, const vector<vec3f>& values);
-bool add_normals(ply_model* ply, const vector<vec3f>& values);
+bool add_positions(ply_model* ply, const view<vec3f>& values);
+bool add_normals(ply_model* ply, const view<vec3f>& values);
 bool add_texcoords(
-    ply_model* ply, const vector<vec2f>& values, bool flipv = false);
-bool add_colors(ply_model* ply, const vector<vec3f>& values);
-bool add_colors(ply_model* ply, const vector<vec4f>& values);
-bool add_radius(ply_model* ply, const vector<float>& values);
-bool add_faces(ply_model* ply, const vector<vector<int>>& values);
+    ply_model* ply, const view<vec2f>& values, bool flipv = false);
+bool add_colors(ply_model* ply, const view<vec3f>& values);
+bool add_colors(ply_model* ply, const view<vec4f>& values);
+bool add_radius(ply_model* ply, const view<float>& values);
+bool add_faces(ply_model* ply, const view<vector<int>>& values);
 bool add_faces(
-    ply_model* ply, const vector<vec3i>& tvalues, const vector<vec4i>& qvalues);
-bool add_triangles(ply_model* ply, const vector<vec3i>& values);
-bool add_quads(ply_model* ply, const vector<vec4i>& values);
-bool add_lines(ply_model* ply, const vector<vec2i>& values);
-bool add_points(ply_model* ply, const vector<int>& values);
+    ply_model* ply, const view<vec3i>& tvalues, const view<vec4i>& qvalues);
+bool add_triangles(ply_model* ply, const view<vec3i>& values);
+bool add_quads(ply_model* ply, const view<vec4i>& values);
+bool add_lines(ply_model* ply, const view<vec2i>& values);
+bool add_points(ply_model* ply, const view<int>& values);
 
 }  // namespace yocto
 
@@ -403,29 +404,29 @@ obj_environment* add_environment(obj_scene* obj);
 obj_shape*       add_shape(obj_scene* obj);
 
 // Add obj shape
-void set_triangles(obj_shape* shape, const vector<vec3i>& triangles,
-    const vector<vec3f>& positions, const vector<vec3f>& normals,
-    const vector<vec2f>& texcoords, const vector<int>& ematerials = {},
+void set_triangles(obj_shape* shape, const view<vec3i>& triangles,
+    const view<vec3f>& positions, const view<vec3f>& normals,
+    const view<vec2f>& texcoords, const view<int>& ematerials = {},
     bool flip_texcoord = false);
-void set_quads(obj_shape* shape, const vector<vec4i>& quads,
-    const vector<vec3f>& positions, const vector<vec3f>& normals,
-    const vector<vec2f>& texcoords, const vector<int>& ematerials = {},
+void set_quads(obj_shape* shape, const view<vec4i>& quads,
+    const view<vec3f>& positions, const view<vec3f>& normals,
+    const view<vec2f>& texcoords, const view<int>& ematerials = {},
     bool flip_texcoord = false);
-void set_lines(obj_shape* shape, const vector<vec2i>& lines,
-    const vector<vec3f>& positions, const vector<vec3f>& normals,
-    const vector<vec2f>& texcoords, const vector<int>& ematerials = {},
+void set_lines(obj_shape* shape, const view<vec2i>& lines,
+    const view<vec3f>& positions, const view<vec3f>& normals,
+    const view<vec2f>& texcoords, const view<int>& ematerials = {},
     bool flip_texcoord = false);
-void set_points(obj_shape* shape, const vector<int>& points,
-    const vector<vec3f>& positions, const vector<vec3f>& normals,
-    const vector<vec2f>& texcoords, const vector<int>& ematerials = {},
+void set_points(obj_shape* shape, const view<int>& points,
+    const view<vec3f>& positions, const view<vec3f>& normals,
+    const view<vec2f>& texcoords, const view<int>& ematerials = {},
     bool flip_texcoord = false);
-void set_fvquads(obj_shape* shape, const vector<vec4i>& quadspos,
-    const vector<vec4i>& quadsnorm, const vector<vec4i>& quadstexcoord,
-    const vector<vec3f>& positions, const vector<vec3f>& normals,
-    const vector<vec2f>& texcoords, const vector<int>& ematerials = {},
+void set_fvquads(obj_shape* shape, const view<vec4i>& quadspos,
+    const view<vec4i>& quadsnorm, const view<vec4i>& quadstexcoord,
+    const view<vec3f>& positions, const view<vec3f>& normals,
+    const view<vec2f>& texcoords, const view<int>& ematerials = {},
     bool flip_texcoord = false);
-void set_materials(obj_shape* shape, const vector<string>& materials);
-void set_instances(obj_shape* shape, const vector<frame3f>& instances);
+void set_materials(obj_shape* shape, const view<string>& materials);
+void set_instances(obj_shape* shape, const view<frame3f>& instances);
 
 }  // namespace yocto
 
@@ -474,8 +475,8 @@ bool save_stl(const string& filename, const stl_model* stl, string& error,
 // Get/set data
 bool get_triangles(const stl_model* stl, int shape_id, vector<vec3i>& triangles,
     vector<vec3f>& positions, vector<vec3f>& fnormals);
-void add_triangles(stl_model* stl, const vector<vec3i>& triangles,
-    const vector<vec3f>& positions, const vector<vec3f>& fnormals);
+void add_triangles(stl_model* stl, const view<vec3i>& triangles,
+    const view<vec3f>& positions, const view<vec3f>& fnormals);
 
 }  // namespace yocto
 

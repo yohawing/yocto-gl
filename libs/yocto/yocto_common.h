@@ -115,27 +115,73 @@ constexpr auto range(T min, T max, T step) {
 // Python `enumerate()` equivalent. Construct an object that iteraterates over a
 // sequence of elements and numbers them.
 // Implementation from http://reedbeta.com/blog/python-like-enumerate-in-cpp17/
-template <typename T,
-    typename Iterator = decltype(std::begin(std::declval<T>())),
-    typename          = decltype(std::end(std::declval<T>()))>
-constexpr auto enumerate(T&& iterable) {
-  // maybe we should avoid tuples here
-  struct iterator {
-    std::size_t index;
-    Iterator    iter;
-    bool operator!=(const iterator& other) const { return iter != other.iter; }
-    void operator++() {
-      ++index;
-      ++iter;
-    }
-    auto operator*() const { return std::tie(index, *iter); }
-  };
-  struct iterable_wrapper {
-    T    iterable;
-    auto begin() { return iterator{0, std::begin(iterable)}; }
-    auto end() { return iterator{0, std::end(iterable)}; }
-  };
-  return iterable_wrapper{std::forward<T>(iterable)};
+//template <typename T,
+//    typename Iterator = decltype(std::begin(std::declval<T>())),
+//    typename          = decltype(std::end(std::declval<T>()))>
+//constexpr auto enumerate(T&& iterable) {
+//  // maybe we should avoid tuples here
+//  struct iterator {
+//    std::size_t index;
+//    Iterator    iter;
+//    bool operator!=(const iterator& other) const { return iter != other.iter; }
+//    void operator++() {
+//      ++index;
+//      ++iter;
+//    }
+//    auto operator*() const { return std::tie(index, *iter); }
+//  };
+//  struct iterable_wrapper {
+//    T    iterable;
+//    auto begin() { return iterator{0, std::begin(iterable)}; }
+//    auto end() { return iterator{0, std::end(iterable)}; }
+//  };
+//  return iterable_wrapper{std::forward<T>(iterable)};
+//}
+
+template <typename T>
+struct view {
+  T*     _data;
+  size_t _count;
+
+  view() {
+    _data  = nullptr;
+    _count = 0;
+  }
+  view(const std::vector<T>& vec) {
+    _data  = (T*)vec.data();
+    _count = vec.size();
+  }
+  view(std::vector<T>& vec) {
+    _data  = vec.data();
+    _count = vec.size();
+  }
+
+  inline T&       operator[](size_t i) { return _data[i]; }
+  inline const T& operator[](size_t i) const { return _data[i]; }
+
+  // std:: vector interface
+  inline size_t   size() const { return _count; }
+  inline bool     empty() const { return _count == 0; }
+  inline T*       data() const { return _data; }
+  inline T*       begin() { return _data; }
+  inline T*       end() { return _data + _count; }
+  inline const T* begin() const { return _data; }
+  inline const T* end() const { return _data + _count; }
+  inline const T& front() const { return _data[0]; }
+  inline T&       front() { return _data[0]; }
+  inline const T& back() const { return _data[_count - 1]; }
+  inline T&       back() { return _data[_count - 1]; }
+
+  using value_type = T;
+
+  // inline void     insert(const T* pos, const T* from, const T* to) {
+  //   assert(0 && "not supported yet");
+  // }
+};
+
+template <typename T>
+inline std::vector<T> copy(const view<T>& v) {
+  return std::vector<T>(v.begin(), v.end());
 }
 
 }  // namespace yocto
