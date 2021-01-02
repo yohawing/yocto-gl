@@ -1472,11 +1472,11 @@ static vector<string> split_string(const string& str) {
 
 // Convert numbert of components
 static vector<float> convert_components(
-    const vector<float>& pixels, int components, int components_to) {
+    const view<float>& pixels, int components, int components_to) {
   if (components <= 0 || components > 4 || components_to <= 0 ||
       components_to > 4)
     throw std::invalid_argument{"components not supported"};
-  if (components == components_to) return pixels;
+  if (components == components_to) return copy(pixels);
 
   auto cpixels = vector<float>(
       (size_t)components_to * pixels.size() / components);
@@ -1493,11 +1493,11 @@ static vector<float> convert_components(
 
 // Convert numbert of components
 static vector<byte> convert_components(
-    const vector<byte>& pixels, int components, int components_to) {
+    const view<byte>& pixels, int components, int components_to) {
   if (components <= 0 || components > 4 || components_to <= 0 ||
       components_to > 4)
     throw std::invalid_argument{"components not supported"};
-  if (components == components_to) return pixels;
+  if (components == components_to) return copy(pixels);
 
   auto npixels = pixels.size() / (size_t)components;
   auto cpixels = vector<byte>((size_t)components_to * npixels);
@@ -1586,7 +1586,7 @@ static bool load_pfm(const string& filename, int& width, int& height,
 
 // save pfm
 static bool save_pfm(const string& filename, int width, int height,
-    int components, const vector<float>& pixels, string& error) {
+    int components, const view<float>& pixels, string& error) {
   // error helpers
   auto open_error = [filename, &error]() {
     error = filename + ": file not found";
@@ -1651,7 +1651,7 @@ static bool load_png(const string& filename, int& width, int& height,
 
 // save png
 static bool save_png(const string& filename, int width, int height,
-    int components, const vector<byte>& pixels, string& error) {
+    int components, const view<byte>& pixels, string& error) {
   // error helpers
   auto write_error = [filename, &error]() {
     error = filename + ": write error";
@@ -1684,7 +1684,7 @@ static bool load_jpg(const string& filename, int& width, int& height,
 
 // save jpg
 static bool save_jpg(const string& filename, int width, int height,
-    int components, const vector<byte>& pixels, string& error) {
+    int components, const view<byte>& pixels, string& error) {
   // error helpers
   auto write_error = [filename, &error]() {
     error = filename + ": write error";
@@ -1717,7 +1717,7 @@ static bool load_tga(const string& filename, int& width, int& height,
 
 // save tga
 static bool save_tga(const string& filename, int width, int height,
-    int components, const vector<byte>& pixels, string& error) {
+    int components, const view<byte>& pixels, string& error) {
   // error helpers
   auto write_error = [filename, &error]() {
     error = filename + ": write error";
@@ -1750,7 +1750,7 @@ static bool load_bmp(const string& filename, int& width, int& height,
 
 // save jpg
 static bool save_bmp(const string& filename, int width, int height,
-    int components, const vector<byte>& pixels, string& error) {
+    int components, const view<byte>& pixels, string& error) {
   // error helpers
   auto write_error = [filename, &error]() {
     error = filename + ": write error";
@@ -1783,7 +1783,7 @@ static bool load_hdr(const string& filename, int& width, int& height,
 
 // save hdr
 static bool save_hdr(const string& filename, int width, int height,
-    int components, const vector<float>& pixels, string& error) {
+    int components, const view<float>& pixels, string& error) {
   // error helpers
   auto write_error = [filename, &error]() {
     error = filename + ": write error";
@@ -1818,7 +1818,7 @@ static bool load_exr(const string& filename, int& width, int& height,
 
 // save exr
 static bool save_exr(const string& filename, int width, int height,
-    int components, const vector<float>& pixels, string& error) {
+    int components, const view<float>& pixels, string& error) {
   // error helpers
   auto write_error = [filename, &error]() {
     error = filename + ": write error";
@@ -1900,15 +1900,15 @@ bool save_image(
   auto ext = path_extension(filename);
   if (ext == ".hdr" || ext == ".HDR") {
     return save_hdr(filename, img.width(), img.height(), 4,
-        {(const float*)img.data(), (const float*)img.data() + img.count() * 4},
+                    {(float*)img.data(), img.count() * 4},
         error);
   } else if (ext == ".pfm" || ext == ".PFM") {
     return save_pfm(filename, img.width(), img.height(), 4,
-        {(const float*)img.data(), (const float*)img.data() + img.count() * 4},
+        {(float*)img.data(), img.count() * 4},
         error);
   } else if (ext == ".exr" || ext == ".EXR") {
     return save_exr(filename, img.width(), img.height(), 4,
-        {(const float*)img.data(), (const float*)img.data() + img.count() * 4},
+        {(float*)img.data(), img.count() * 4},
         error);
   } else if (!is_hdr_filename(filename)) {
     return save_image(filename, rgb_to_srgbb(img), error);
@@ -1986,19 +1986,19 @@ bool save_image(
   auto ext = path_extension(filename);
   if (ext == ".png" || ext == ".PNG") {
     return save_png(filename, img.width(), img.height(), 4,
-        {(const byte*)img.data(), (const byte*)img.data() + img.count() * 4},
+        {(byte*)img.data(), img.count() * 4},
         error);
   } else if (ext == ".jpg" || ext == ".JPG") {
     return save_jpg(filename, img.width(), img.height(), 4,
-        {(const byte*)img.data(), (const byte*)img.data() + img.count() * 4},
+        {(byte*)img.data(), img.count() * 4},
         error);
   } else if (ext == ".tga" || ext == ".TGA") {
     return save_tga(filename, img.width(), img.height(), 4,
-        {(const byte*)img.data(), (const byte*)img.data() + img.count() * 4},
+        {(byte*)img.data(), img.count() * 4},
         error);
   } else if (ext == ".bmp" || ext == ".BMP") {
     return save_bmp(filename, img.width(), img.height(), 4,
-        {(const byte*)img.data(), (const byte*)img.data() + img.count() * 4},
+        {(byte*)img.data(), img.count() * 4},
         error);
   } else if (is_hdr_filename(filename)) {
     return save_image(filename, srgb_to_rgb(img), error);
@@ -2112,7 +2112,7 @@ static bool load_yvol(const string& filename, int& width, int& height,
 
 // save pfm
 static bool save_yvol(const string& filename, int width, int height, int depth,
-    int components, const vector<float>& voxels, string& error) {
+    int components, const view<float>& voxels, string& error) {
   // error helpers
   auto open_error = [filename, &error]() {
     error = filename + ": file not found";
@@ -2156,7 +2156,7 @@ bool load_volume(const string& filename, volume<float>& vol, string& error) {
 bool save_volume(
     const string& filename, const volume<float>& vol, string& error) {
   return save_yvol(filename, vol.width(), vol.height(), vol.depth(), 1,
-      {vol.data(), vol.data() + vol.count()}, error);
+      {(float*)vol.data(), vol.count()}, error);
 }
 
 }  // namespace yocto

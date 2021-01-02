@@ -101,9 +101,9 @@ inline void parallel_for(T num1, T num2, Func&& func);
 // Simple parallel for used since our target platforms do not yet support
 // parallel algorithms. `Func` takes a reference to a `T`.
 template <typename T, typename Func>
-inline void parallel_foreach(vector<T>& values, Func&& func);
+inline void parallel_foreach(view<T>& values, Func&& func);
 template <typename T, typename Func>
-inline void parallel_foreach(const vector<T>& values, Func&& func);
+inline void parallel_foreach(const view<T>& values, Func&& func);
 
 }  // namespace yocto
 
@@ -205,12 +205,12 @@ inline void parallel_for(T num1, T num2, Func&& func) {
 // Simple parallel for used since our target platforms do not yet support
 // parallel algorithms. `Func` takes a reference to a `T`.
 template <typename T, typename Func>
-inline void parallel_foreach(vector<T>& values, Func&& func) {
+inline void parallel_foreach(view<T>& values, Func&& func) {
   parallel_for(
       0, (int)values.size(), [&func, &values](int idx) { func(values[idx]); });
 }
 template <typename T, typename Func>
-inline void parallel_foreach(const vector<T>& values, Func&& func) {
+inline void parallel_foreach(const view<T>& values, Func&& func) {
   parallel_for(
       0, (int)values.size(), [&func, &values](int idx) { func(values[idx]); });
 }

@@ -45,6 +45,7 @@
 #include <utility>
 #include <vector>
 
+#include "yocto_common.h"
 #include "yocto_math.h"
 
 // -----------------------------------------------------------------------------
@@ -101,8 +102,8 @@ struct image {
   const T* end() const;
 
   // [experimental] data access as vector --- will be replaced by views
-  vector<T>&       data_vector();
-  const vector<T>& data_vector() const;
+  view<T>&       data_vector();
+  const view<T>& data_vector() const;
 
  private:
   // data
@@ -597,11 +598,11 @@ inline const T* image<T>::end() const {
 
 // data access as vector
 template <typename T>
-inline vector<T>& image<T>::data_vector() {
+inline view<T>& image<T>::data_vector() {
   return pixels;
 }
 template <typename T>
-inline const vector<T>& image<T>::data_vector() const {
+inline const view<T>& image<T>::data_vector() const {
   return pixels;
 }
 
