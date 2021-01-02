@@ -161,9 +161,17 @@ struct view {
     _data  = vec.data();
     _count = vec.size();
   }
-  view(std::initializer_list<T>& list) {
-    _data  = alloca(list.size());
-    _count = list.size();
+  // still never used but handy
+  template <int N>
+  view(const std::array<T, N>& vec) {
+    _data  = (T*)vec.data();
+    _count = N;
+  }
+  // still never used but handy
+  template <int N>
+  view(std::array<T, N>& vec) {
+    _data  = vec.data();
+    _count = N;
   }
 
   inline T&       operator[](size_t i) { return _data[i]; }
