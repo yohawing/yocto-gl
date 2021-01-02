@@ -140,15 +140,15 @@ constexpr auto range(T min, T max, T step) {
 
 template <typename T>
 struct view {
-  T*     _data = nullptr;
+  T*     _data  = nullptr;
   size_t _count = 0;
 
-    view() = default;
-    
-    view(T* ptr, size_t count) {
-      _data  = ptr;
-      _count = count;
-    }
+  view() = default;
+
+  view(T* ptr, size_t count) {
+    _data  = ptr;
+    _count = count;
+  }
   view(const view<T>& vec) {
     _data  = vec._data;
     _count = vec._count;
@@ -160,6 +160,10 @@ struct view {
   view(std::vector<T>& vec) {
     _data  = vec.data();
     _count = vec.size();
+  }
+  view(std::initializer_list<T>& list) {
+    _data  = alloca(list.size());
+    _count = list.size();
   }
 
   inline T&       operator[](size_t i) { return _data[i]; }
@@ -178,11 +182,26 @@ struct view {
   inline const T& back() const { return _data[_count - 1]; }
   inline T&       back() { return _data[_count - 1]; }
 
-  using value_type = T;
+  inline const T& at(size_t i) const {
+    if (i < _count) {
+      return _data[i];
+    } else {
+      throw std::out_of_range{
+          "Accessed position [" + std::to_string(i) +
+          "] is out of range (size = " + std::to_string(_count)};
+    }
+  }
+  inline T& at(size_t i) {
+    if (i < _count) {
+      return _data[i];
+    } else {
+      throw std::out_of_range{
+          "Accessed position [" + std::to_string(i) +
+          "] is out of range (size = " + std::to_string(_count)};
+    }
+  }
 
-  // inline void     insert(const T* pos, const T* from, const T* to) {
-  //   assert(0 && "not supported yet");
-  // }
+  using value_type = T;
 };
 
 template <typename T>

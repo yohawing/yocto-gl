@@ -66,7 +66,7 @@ using namespace std::string_literals;
 namespace yocto {
 
 // Find the first keyframe value that is greater than the argument.
-inline int keyframe_index(const vector<float>& times, const float& time) {
+inline int keyframe_index(const view<float>& times, const float& time) {
   for (auto i = 0; i < times.size(); i++)
     if (times[i] > time) return i;
   return (int)times.size();
@@ -75,7 +75,7 @@ inline int keyframe_index(const vector<float>& times, const float& time) {
 // Evaluates a keyframed value using step interpolation.
 template <typename T>
 inline T keyframe_step(
-    const vector<float>& times, const vector<T>& vals, float time) {
+    const view<float>& times, const view<T>& vals, float time) {
   if (time <= times.front()) return vals.front();
   if (time >= times.back()) return vals.back();
   time     = clamp(time, times.front(), times.back() - 0.001f);
@@ -86,7 +86,7 @@ inline T keyframe_step(
 // Evaluates a keyframed value using linear interpolation.
 template <typename T>
 inline vec4f keyframe_slerp(
-    const vector<float>& times, const vector<vec4f>& vals, float time) {
+    const view<float>& times, const view<vec4f>& vals, float time) {
   if (time <= times.front()) return vals.front();
   if (time >= times.back()) return vals.back();
   time     = clamp(time, times.front(), times.back() - 0.001f);
@@ -98,7 +98,7 @@ inline vec4f keyframe_slerp(
 // Evaluates a keyframed value using linear interpolation.
 template <typename T>
 inline T keyframe_linear(
-    const vector<float>& times, const vector<T>& vals, float time) {
+    const view<float>& times, const view<T>& vals, float time) {
   if (time <= times.front()) return vals.front();
   if (time >= times.back()) return vals.back();
   time     = clamp(time, times.front(), times.back() - 0.001f);
@@ -110,7 +110,7 @@ inline T keyframe_linear(
 // Evaluates a keyframed value using Bezier interpolation.
 template <typename T>
 inline T keyframe_bezier(
-    const vector<float>& times, const vector<T>& vals, float time) {
+    const view<float>& times, const view<T>& vals, float time) {
   if (time <= times.front()) return vals.front();
   if (time >= times.back()) return vals.back();
   time     = clamp(time, times.front(), times.back() - 0.001f);
@@ -196,7 +196,7 @@ vector<string> scene_validation(const sceneio_scene* scene, bool notextures) {
       }
     }
   };
-  auto check_empty_textures = [&errs](const vector<sceneio_texture*>& vals) {
+  auto check_empty_textures = [&errs](const view<sceneio_texture*>& vals) {
     for (auto value : vals) {
       if (value->hdr.empty() && value->ldr.empty()) {
         errs.push_back("empty texture " + value->name);
@@ -1133,7 +1133,7 @@ static bool load_instance(
 
 // save instances
 // static
-bool save_instance(const string& filename, const vector<frame3f>& frames,
+bool save_instance(const string& filename, const view<frame3f>& frames,
     string& error, bool ascii = false) {
   auto format_error = [filename, &error]() {
     error = filename + ": unknown format";
@@ -1521,7 +1521,7 @@ static bool load_json_scene(const string& filename, sceneio_scene* scene,
 
   // get filename from name
   auto make_filename = [filename](const string& name, const string& group,
-                           const vector<string>& extensions) {
+                           const view<string>& extensions) {
     for (auto& extension : extensions) {
       auto filepath = path_join(
           path_dirname(filename), group, name + extension);
@@ -1535,7 +1535,8 @@ static bool load_json_scene(const string& filename, sceneio_scene* scene,
   for (auto [name, value] : shape_map) {
     auto shape = value.first;
     if (progress_cb) progress_cb("load shape", progress.x++, progress.y);
-    auto path = make_filename(name, "shapes", {".ply", ".obj"});
+    auto exts = vector<string>{".ply", ".obj"};
+    auto path = make_filename(name, "shapes", exts);
     if (!load_shape(path, shape->points, shape->lines, shape->triangles,
             shape->quads, shape->quadspos, shape->quadsnorm,
             shape->quadstexcoord, shape->positions, shape->normals,
@@ -1548,8 +1549,9 @@ static bool load_json_scene(const string& filename, sceneio_scene* scene,
   for (auto [name, value] : texture_map) {
     auto texture = value.first;
     if (progress_cb) progress_cb("load texture", progress.x++, progress.y);
+      auto exts = vector<string>{".hdr", ".exr", ".png", ".jpg"};
     auto path = make_filename(
-        name, "textures", {".hdr", ".exr", ".png", ".jpg"});
+        name, "textures", exts);
     if (!load_image(path, texture->hdr, texture->ldr, error))
       return dependent_error();
   }
@@ -1558,7 +1560,8 @@ static bool load_json_scene(const string& filename, sceneio_scene* scene,
   ply_instance_map.erase("");
   for (auto [name, instance] : ply_instance_map) {
     if (progress_cb) progress_cb("load instance", progress.x++, progress.y);
-    auto path = make_filename(name, "instances", {".ply"});
+      auto exts = vector<string>{".ply"};
+    auto path = make_filename(name, "instances", exts);
     if (!load_instance(path, instance->frames, error)) return dependent_error();
   }
 
