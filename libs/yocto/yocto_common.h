@@ -154,7 +154,7 @@ struct view {
     _count = vec._count;
   }
   view(const std::vector<T>& vec) {
-    _data  = (T*)vec.data();
+    _data  = (T*)vec.data();  // TODO(giacomo): better const-correctness
     _count = vec.size();
   }
   view(std::vector<T>& vec) {

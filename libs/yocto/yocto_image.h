@@ -102,8 +102,8 @@ struct image {
   const T* end() const;
 
   // [experimental] data access as vector --- will be replaced by views
-  view<T>&       data_vector();
-  const view<T>& data_vector() const;
+  vector<T>&       data_vector();
+  const vector<T>& data_vector() const;
 
  private:
   // data
@@ -598,11 +598,11 @@ inline const T* image<T>::end() const {
 
 // data access as vector
 template <typename T>
-inline view<T>& image<T>::data_vector() {
+inline vector<T>& image<T>::data_vector() {
   return pixels;
 }
 template <typename T>
-inline const view<T>& image<T>::data_vector() const {
+inline const vector<T>& image<T>::data_vector() const {
   return pixels;
 }
 

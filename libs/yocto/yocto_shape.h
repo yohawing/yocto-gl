@@ -47,9 +47,9 @@
 #include <utility>
 #include <vector>
 
+#include "yocto_common.h"
 #include "yocto_geometry.h"
 #include "yocto_math.h"
-#include "yocto_common.h"
 
 // -----------------------------------------------------------------------------
 // USING DIRECTIVES
@@ -105,12 +105,12 @@ pair<vector<vec3f>, vector<vec3f>> compute_matrix_skinning(
     const view<vec4f>& weights, const view<vec4i>& joints,
     const view<mat4f>& xforms);
 // Update skinning
-void udpate_skinning(vector<vec3f>& skinned_positions,
-    vector<vec3f>& skinned_normals, const view<vec3f>& positions,
+void udpate_skinning(view<vec3f>& skinned_positions,
+    view<vec3f>& skinned_normals, const view<vec3f>& positions,
     const view<vec3f>& normals, const view<vec4f>& weights,
     const view<vec4i>& joints, const view<frame3f>& xforms);
-void update_matrix_skinning(vector<vec3f>& skinned_positions,
-    vector<vec3f>& skinned_normals, const view<vec3f>& positions,
+void update_matrix_skinning(view<vec3f>& skinned_positions,
+    view<vec3f>& skinned_normals, const view<vec3f>& positions,
     const view<vec3f>& normals, const view<vec4f>& weights,
     const view<vec4i>& joints, const view<mat4f>& xforms);
 
