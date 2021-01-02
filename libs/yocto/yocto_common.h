@@ -115,16 +115,16 @@ constexpr auto range(T min, T max, T step) {
 // Python `enumerate()` equivalent. Construct an object that iteraterates over a
 // sequence of elements and numbers them.
 // Implementation from http://reedbeta.com/blog/python-like-enumerate-in-cpp17/
-//template <typename T,
+// template <typename T,
 //    typename Iterator = decltype(std::begin(std::declval<T>())),
 //    typename          = decltype(std::end(std::declval<T>()))>
-//constexpr auto enumerate(T&& iterable) {
+// constexpr auto enumerate(T&& iterable) {
 //  // maybe we should avoid tuples here
 //  struct iterator {
 //    std::size_t index;
 //    Iterator    iter;
-//    bool operator!=(const iterator& other) const { return iter != other.iter; }
-//    void operator++() {
+//    bool operator!=(const iterator& other) const { return iter != other.iter;
+//    } void operator++() {
 //      ++index;
 //      ++iter;
 //    }
@@ -146,6 +146,10 @@ struct view {
   view() {
     _data  = nullptr;
     _count = 0;
+  }
+  view(const view<T>& vec) {
+    _data  = vec._data;
+    _count = vec._count;
   }
   view(const std::vector<T>& vec) {
     _data  = (T*)vec.data();

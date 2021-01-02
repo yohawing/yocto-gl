@@ -210,7 +210,7 @@ static void init_embree_bvh(bvh_scene* scene, const bvh_params& params) {
 }
 
 static void update_embree_bvh(
-    bvh_scene* scene, const vector<int>& updated_instances) {
+    bvh_scene* scene, const view<int>& updated_instances) {
   // scene bvh
   auto escene = scene->embree_bvh;
   for (auto instance_id : updated_instances) {
@@ -296,33 +296,32 @@ bvh_scene::~bvh_scene() {
 }
 
 // Create BVH shortcuts
-int add_shape(bvh_scene* bvh, const vector<int>& points,
-    const vector<vec2i>& lines, const vector<vec3i>& triangles,
-    const vector<vec4i>& quads, const vector<vec3f>& positions,
-    const vector<float>& radius, bool as_view) {
+int add_shape(bvh_scene* bvh, const view<int>& points, const view<vec2i>& lines,
+    const view<vec3i>& triangles, const view<vec4i>& quads,
+    const view<vec3f>& positions, const view<float>& radius, bool as_view) {
   bvh->shapes.push_back(new bvh_shape{});
   set_shape(bvh, (int)bvh->shapes.size() - 1, points, lines, triangles, quads,
       positions, radius, as_view);
   return (int)bvh->shapes.size() - 1;
 }
-void set_shape(bvh_scene* bvh, int shape_id, const vector<int>& points,
-    const vector<vec2i>& lines, const vector<vec3i>& triangles,
-    const vector<vec4i>& quads, const vector<vec3f>& positions,
-    const vector<float>& radius, bool as_view) {
+void set_shape(bvh_scene* bvh, int shape_id, const view<int>& points,
+    const view<vec2i>& lines, const view<vec3i>& triangles,
+    const view<vec4i>& quads, const view<vec3f>& positions,
+    const view<float>& radius, bool as_view) {
   auto shape         = bvh->shapes[shape_id];
-  shape->points_data = as_view ? vector<int>{} : points;
+  shape->points_data = as_view ? vector<int>{} : copy(points);
   shape->points     = as_view ? bvh_span{points} : bvh_span{shape->points_data};
-  shape->lines_data = as_view ? vector<vec2i>{} : lines;
+  shape->lines_data = as_view ? vector<vec2i>{} : copy(lines);
   shape->lines      = as_view ? bvh_span{lines} : bvh_span{shape->lines_data};
-  shape->triangles_data = as_view ? vector<vec3i>{} : triangles;
+  shape->triangles_data = as_view ? vector<vec3i>{} : copy(triangles);
   shape->triangles      = as_view ? bvh_span{triangles}
                                   : bvh_span{shape->triangles_data};
-  shape->quads_data     = as_view ? vector<vec4i>{} : quads;
+  shape->quads_data     = as_view ? vector<vec4i>{} : copy(quads);
   shape->quads = as_view ? bvh_span{quads} : bvh_span{shape->quads_data};
-  shape->positions_data = as_view ? vector<vec3f>{} : positions;
+  shape->positions_data = as_view ? vector<vec3f>{} : copy(positions);
   shape->positions      = as_view ? bvh_span{positions}
                                   : bvh_span{shape->positions_data};
-  shape->radius_data    = as_view ? vector<float>{} : radius;
+  shape->radius_data    = as_view ? vector<float>{} : copy(radius);
   shape->radius = as_view ? bvh_span{radius} : bvh_span{shape->radius_data};
 }
 
@@ -353,7 +352,7 @@ namespace yocto {
 
 // Splits a BVH node using the SAH heuristic. Returns split position and axis.
 static pair<int, int> split_sah(vector<int>& primitives,
-    const vector<bbox3f>& bboxes, const vector<vec3f>& centers, int start,
+    const view<bbox3f>& bboxes, const view<vec3f>& centers, int start,
     int end) {
   // initialize split axis and position
   auto split_axis = 0;
@@ -417,7 +416,7 @@ static pair<int, int> split_sah(vector<int>& primitives,
 // Splits a BVH node using the balance heuristic. Returns split position and
 // axis.
 static pair<int, int> split_balanced(vector<int>& primitives,
-    const vector<bbox3f>& bboxes, const vector<vec3f>& centers, int start,
+    const view<bbox3f>& bboxes, const view<vec3f>& centers, int start,
     int end) {
   // initialize split axis and position
   auto axis = 0;
@@ -456,7 +455,7 @@ static pair<int, int> split_balanced(vector<int>& primitives,
 // Splits a BVH node using the middle heutirtic. Returns split position and
 // axis.
 static pair<int, int> split_middle(vector<int>& primitives,
-    const vector<bbox3f>& bboxes, const vector<vec3f>& centers, int start,
+    const view<bbox3f>& bboxes, const view<vec3f>& centers, int start,
     int end) {
   // initialize split axis and position
   auto axis = 0;
@@ -494,8 +493,8 @@ static pair<int, int> split_middle(vector<int>& primitives,
 
 // Split bvh nodes according to a type
 static pair<int, int> split_nodes(vector<int>& primitives,
-    const vector<bbox3f>& bboxes, const vector<vec3f>& centers, int start,
-    int end, bvh_build_type type) {
+    const view<bbox3f>& bboxes, const view<vec3f>& centers, int start, int end,
+    bvh_build_type type) {
   switch (type) {
     case bvh_build_type::default_:
       return split_middle(primitives, bboxes, centers, start, end);
@@ -514,7 +513,7 @@ const int bvh_max_prims = 4;
 
 // Build BVH nodes
 static void build_bvh_serial(
-    bvh_tree& bvh, const vector<bbox3f>& bboxes, const bvh_params& params) {
+    bvh_tree& bvh, const view<bbox3f>& bboxes, const bvh_params& params) {
   // get values
   auto& nodes      = bvh.nodes;
   auto& primitives = bvh.primitives;
@@ -582,7 +581,7 @@ static void build_bvh_serial(
 
 // Build BVH nodes
 static void build_bvh_parallel(
-    bvh_tree_& bvh, const vector<bbox3f>& bboxes, bvh_build_type type) {
+    bvh_tree_& bvh, const view<bbox3f>& bboxes, bvh_build_type type) {
   // get values
   auto& nodes      = bvh.nodes;
   auto& primitives = bvh.primitives;
@@ -681,7 +680,7 @@ static void build_bvh_parallel(
 #endif
 
 // Update bvh
-static void update_bvh(bvh_tree& bvh, const vector<bbox3f>& bboxes) {
+static void update_bvh(bvh_tree& bvh, const view<bbox3f>& bboxes) {
   for (auto nodeid = (int)bvh.nodes.size() - 1; nodeid >= 0; nodeid--) {
     auto& node = bvh.nodes[nodeid];
     node.bbox  = invalidb3f;
@@ -826,7 +825,7 @@ static void update_bvh(bvh_shape* shape) {
   update_bvh(shape->bvh, bboxes);
 }
 
-void update_bvh(bvh_scene* scene, const vector<int>& updated_instances) {
+void update_bvh(bvh_scene* scene, const view<int>& updated_instances) {
 #ifdef YOCTO_EMBREE
   if (scene->embree_bvh) {
     return update_embree_bvh(scene, updated_instances);
@@ -845,8 +844,8 @@ void update_bvh(bvh_scene* scene, const vector<int>& updated_instances) {
   update_bvh(scene->bvh, bboxes);
 }
 
-void update_bvh(bvh_scene* scene, const vector<int>& updated_instances,
-    const vector<int>& updated_shapes, const progress_callback& progress_cb) {
+void update_bvh(bvh_scene* scene, const view<int>& updated_instances,
+    const view<int>& updated_shapes, const progress_callback& progress_cb) {
   // handle progress
   auto progress = vec2i{0, 1 + (int)updated_shapes.size()};
 

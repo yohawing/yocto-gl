@@ -44,6 +44,7 @@
 #include <string>
 #include <vector>
 
+#include "yocto_common.h"
 #include "yocto_geometry.h"
 #include "yocto_math.h"
 
@@ -90,23 +91,27 @@ struct bvh_tree {
   vector<int>      primitives = {};
 };
 
+// TODO(giacomo): this is dirty!
+#define bvh_span view
+
 // BVH span to give a view over an array
-template <typename T>
-struct bvh_span {
-  explicit bvh_span(const vector<T>& data)
-      : _data{data.data()}, _size{data.size()} {}
-  bvh_span()                = default;
-  bvh_span(const bvh_span&) = default;
-  bvh_span& operator=(const bvh_span&) = default;
-  bool      empty() const { return _size == 0; }
-  size_t    size() const { return _size; }
-  const T&  operator[](int idx) const { return _data[idx]; }
-  const T*  begin() const { return _data; }
-  const T*  end() const { return _data + _size; }
-  const T*  data() const { return _data; }
-  const T*  _data = nullptr;
-  size_t    _size = 0;
-};
+// struct bvh_span {
+//   explicit bvh_span(const view<T>& data)
+//       : _data{data.data()}, _size{data.size()} {}
+//   explicit bvh_span(const vector<T>& data)
+//       : _data{data.data()}, _size{data.size()} {}
+//   bvh_span()                = default;
+//   bvh_span(const bvh_span&) = default;
+//   bvh_span& operator=(const bvh_span&) = default;
+//   bool      empty() const { return _size == 0; }
+//   size_t    size() const { return _size; }
+//   const T&  operator[](int idx) const { return _data[idx]; }
+//   const T*  begin() const { return _data; }
+//   const T*  end() const { return _data + _size; }
+//   const T*  data() const { return _data; }
+//   const T*  _data = nullptr;
+//   size_t    _size = 0;
+// };
 
 // BVH data for whole shapes. This interface makes copies of all the data.
 struct bvh_shape {
@@ -164,14 +169,14 @@ struct bvh_scene {
 };
 
 // Set shapes
-int  add_shape(bvh_scene* bvh, const vector<int>& points,
-     const vector<vec2i>& lines, const vector<vec3i>& triangles,
-     const vector<vec4i>& quads, const vector<vec3f>& positions,
-     const vector<float>& radius, bool as_view = false);
-void set_shape(bvh_scene* bvh, int shape_id, const vector<int>& points,
-    const vector<vec2i>& lines, const vector<vec3i>& triangles,
-    const vector<vec4i>& quads, const vector<vec3f>& positions,
-    const vector<float>& radius, bool as_view = false);
+int add_shape(bvh_scene* bvh, const view<int>& points, const view<vec2i>& lines,
+    const view<vec3i>& triangles, const view<vec4i>& quads,
+    const view<vec3f>& positions, const view<float>& radius,
+    bool as_view = false);
+void set_shape(bvh_scene* bvh, int shape_id, const view<int>& points,
+    const view<vec2i>& lines, const view<vec3i>& triangles,
+    const view<vec4i>& quads, const view<vec3f>& positions,
+    const view<float>& radius, bool as_view = false);
 
 // Set instances
 void set_instances(bvh_scene* bvh, int num_instances,
@@ -212,9 +217,8 @@ void init_bvh(bvh_scene* bvh, const bvh_params& params,
     const progress_callback& progress_cb = {});
 
 // Refit bvh data
-void update_bvh(bvh_scene* bvh, const vector<int>& updated_instances,
-    const vector<int>&       updated_shapes,
-    const progress_callback& progress_cb = {});
+void update_bvh(bvh_scene* bvh, const view<int>& updated_instances,
+    const view<int>& updated_shapes, const progress_callback& progress_cb = {});
 
 // Results of intersect_xxx and overlap_xxx functions that include hit flag,
 // instance id, shape element id, shape element uv and intersection distance.
