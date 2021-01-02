@@ -140,13 +140,15 @@ constexpr auto range(T min, T max, T step) {
 
 template <typename T>
 struct view {
-  T*     _data;
-  size_t _count;
+  T*     _data = nullptr;
+  size_t _count = 0;
 
-  view() {
-    _data  = nullptr;
-    _count = 0;
-  }
+    view() = default;
+    
+    view(T* ptr, size_t count) {
+      _data  = ptr;
+      _count = count;
+    }
   view(const view<T>& vec) {
     _data  = vec._data;
     _count = vec._count;

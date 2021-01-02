@@ -53,6 +53,8 @@
 #include <utility>
 #include <vector>
 
+#include "yocto_common.h"
+
 // -----------------------------------------------------------------------------
 // USING DIRECTIVES
 // -----------------------------------------------------------------------------
@@ -118,7 +120,7 @@ struct json_value {
   explicit json_value(const json_object&);
   explicit json_value(const json_binary&);
   template <typename T>
-  explicit json_value(const vector<T>& value);
+  explicit json_value(const view<T>& value);
   template <typename T, size_t N>
   explicit json_value(const array<T, N>& value);
 
@@ -620,7 +622,7 @@ inline bool set_value(json_tview json, bool value);
 inline bool set_value(json_tview json, const string& value);
 inline bool set_value(json_tview json, const char* value);
 template <typename T>
-inline bool set_value(json_tview json, const vector<T>& value);
+inline bool set_value(json_tview json, const view<T>& value);
 template <typename T, size_t N>
 inline bool set_value(json_tview json, const array<T, N>& value);
 
@@ -741,7 +743,7 @@ inline json_value::json_value(const json_object& value)
 inline json_value::json_value(const json_binary& value)
     : _type{json_type::binary}, _binary{new json_binary{value}} {}
 template <typename T>
-inline json_value::json_value(const vector<T>& value)
+inline json_value::json_value(const view<T>& value)
     : _type{json_type::array}
     , _array{new json_array{value.begin(), value.end()}} {}
 template <typename T, size_t N>
@@ -2373,7 +2375,7 @@ inline bool set_value(json_tview json, const char* value) {
   return set_string(json, value);
 }
 template <typename T>
-inline bool set_value(json_tview json, const vector<T>& value) {
+inline bool set_value(json_tview json, const view<T>& value) {
   if (!set_array(json)) return false;
   for (auto& v : value) {
     if (!set_value(append_element(json), v)) return false;

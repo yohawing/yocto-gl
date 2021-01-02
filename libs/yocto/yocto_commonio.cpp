@@ -288,7 +288,7 @@ bool load_binary(const string& filename, vector<byte>& data, string& error) {
 
 // Save a binary file
 bool save_binary(
-    const string& filename, const vector<byte>& data, string& error) {
+    const string& filename, const view<byte>& data, string& error) {
   auto fs = open_file(filename, "wb");
   if (!fs) {
     error = filename + ": file not found";

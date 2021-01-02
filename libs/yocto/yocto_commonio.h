@@ -51,6 +51,7 @@
 #include <utility>
 #include <vector>
 
+#include "yocto_common.h"
 #include "yocto_json.h"
 
 // -----------------------------------------------------------------------------
@@ -297,8 +298,7 @@ using byte = unsigned char;
 
 // Load/save a binary file
 bool load_binary(const string& filename, vector<byte>& data, string& error);
-bool save_binary(
-    const string& filename, const vector<byte>& data, string& error);
+bool save_binary(const string& filename, const view<byte>& data, string& error);
 
 }  // namespace yocto
 
