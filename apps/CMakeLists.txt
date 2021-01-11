@@ -1,6 +1,7 @@
 add_subdirectory(yimage)
 add_subdirectory(ytrace)
 add_subdirectory(yshape)
+add_subdirectory(zizou)
 
 add_subdirectory(yscenetrace)
 add_subdirectory(ysceneproc)

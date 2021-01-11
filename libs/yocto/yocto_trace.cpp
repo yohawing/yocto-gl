@@ -1894,38 +1894,82 @@ void trace_start(trace_state* state, const trace_scene* scene,
   state->stop   = false;
 
   // render preview
-  if (progress_cb) progress_cb("trace preview", 0, params.samples);
-  auto pprms = params;
-  pprms.resolution /= params.pratio;
-  pprms.samples = 1;
-  auto preview  = trace_image(scene, camera, bvh, lights, pprms);
-  for (auto j = 0; j < state->render.height(); j++) {
-    for (auto i = 0; i < state->render.width(); i++) {
-      auto pi               = clamp(i / params.pratio, 0, preview.width() - 1),
-           pj               = clamp(j / params.pratio, 0, preview.height() - 1);
-      state->render[{i, j}] = preview[{pi, pj}];
-    }
-  }
-  if (image_cb) image_cb(state->render, 0, params.samples);
+//  if (progress_cb) progress_cb("trace preview", 0, params.samples);
+//  auto pprms = params;
+//  pprms.resolution /= params.pratio;
+//  pprms.samples = 1;
+//  auto preview  = trace_image(scene, camera, bvh, lights, pprms);
+//  for (auto j = 0; j < state->render.height(); j++) {
+//    for (auto i = 0; i < state->render.width(); i++) {
+//      auto pi               = clamp(i / params.pratio, 0, preview.width() - 1),
+//           pj               = clamp(j / params.pratio, 0, preview.height() - 1);
+//      state->render[{i, j}] = preview[{pi, pj}];
+//    }
+//  }
+//  if (image_cb) image_cb(state->render, 0, params.samples);
+  
+  
+//
+    state->worker = std::async(std::launch::async, [=]() {
 
-  // start renderer
+        for (auto j = 0; j < state->render.height(); j++) {
+            for (auto i = 0; i < state->render.width(); i++) {
+
+              if( i > state->render.width()/2 ) continue;
+              trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
+
+            }
+        }
+  //      if (progress_cb) progress_cb("trace image", s, 16);
+        if (image_cb) image_cb(state->render, 1, params.samples);
+
+    });
+  
+  
   state->worker = std::async(std::launch::async, [=]() {
-    for (auto sample = 0; sample < params.samples; sample++) {
-      if (state->stop) return;
-      if (progress_cb) progress_cb("trace image", sample, params.samples);
-      parallel_for(
-          state->render.width(), state->render.height(), [&](int i, int j) {
-            if (state->stop) return;
+      
+      for (auto j = 0; j < state->render.height(); j++) {
+          for (auto i = 0; i < state->render.width(); i++) {
+            
+            if( i <= state->render.width()/2 ) continue;
             trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
-            if (async_cb)
-              async_cb(state->render, sample, params.samples, {i, j});
-          });
-      if (image_cb) image_cb(state->render, sample + 1, params.samples);
-    }
-    if (progress_cb) progress_cb("trace image", params.samples, params.samples);
-    if (image_cb) image_cb(state->render, params.samples, params.samples);
+            
+          }
+      }
+//      if (progress_cb) progress_cb("trace image", s, 16);
+      if (image_cb) image_cb(state->render, 1, params.samples);
+    
   });
+  
+  
+  
+  
+  // start renderer
+//  state->worker = std::async(std::launch::async, [=]() {
+//    for (auto sample = 0; sample < params.samples; sample++) {
+//      if (state->stop) return;
+//      if (progress_cb) progress_cb("trace image", sample, params.samples);
+//
+//      parallel_for(
+//          state->render.width(), state->render.height(), [&](int i, int j) {
+//            if (state->stop) return;
+//            trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
+//            if (async_cb)
+//              async_cb(state->render, sample, params.samples, {i, j});
+//          });
+//
+//
+//      if (image_cb) image_cb(state->render, sample + 1, params.samples);
+//    }
+//
+//
+//    if (progress_cb) progress_cb("trace image", params.samples, params.samples);
+//    if (image_cb) image_cb(state->render, params.samples, params.samples);
+//
+//  });
 }
+
+
 void trace_stop(trace_state* state) {
   if (state == nullptr) return;
   state->stop = true;
