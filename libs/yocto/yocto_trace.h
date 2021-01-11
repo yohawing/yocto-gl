@@ -519,6 +519,16 @@ image<vec4f> trace_image(const trace_scene* scene, const trace_camera* camera,
 // Check is a sampler requires lights
 bool is_sampler_lit(const trace_params& params);
 
+
+// render area with mouse
+struct trace_brush {
+  int w = 100;
+  int h = 100;
+  int x = 100;
+  int y = 100;
+
+};
+
 // [experimental] Asynchronous state
 struct trace_state {
   image<vec4f>     render       = {};
@@ -527,6 +537,7 @@ struct trace_state {
   image<rng_state> rngs         = {};
   future<void>     worker       = {};  // async
   atomic<bool>     stop         = {};  // async
+  trace_brush brush = {};
 };
 
 // [experimental] Callback used to report partially computed image
@@ -540,6 +551,9 @@ void trace_start(trace_state* state, const trace_scene* scene,
     const trace_lights* lights, const trace_params& params,
     const progress_callback& progress_cb = {},
     const image_callback& image_cb = {}, const async_callback& async_cb = {});
+
+
+
 void trace_step(trace_state* state, const trace_scene* scene,
     const trace_camera* camera, const trace_bvh* bvh,
     const trace_lights* lights, const trace_params& params,
