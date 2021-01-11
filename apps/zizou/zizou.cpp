@@ -302,7 +302,6 @@ int run_view(const view_params& params) {
 //
             
         }
-    // 視点移動のコード
         else if ((input.mouse_left || input.mouse_right) &&
                    input.mouse_pos != input.mouse_last) {
 //          trace_stop(state);
@@ -332,7 +331,11 @@ int run_view(const view_params& params) {
       });
 
   // run view
-  run_view(viewer);
+  bool bProduction = false; // ここをtrueにするとフルスクリーン
+  if (bProduction)
+    run_view(viewer, true, true);
+  else
+    run_view(viewer, true);
 
   // stop
   trace_stop(state);

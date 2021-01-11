@@ -285,7 +285,7 @@ void update(gui_window* win, imageview_state* state, const gui_input& input) {
 }
 
 // Run application
-void run_view(imageview_state* state) {
+void run_view(imageview_state* state, bool widgets_left, bool bFullscreen) {
   // callbacks
   auto callbacks     = gui_callbacks{};
   callbacks.clear_cb = [state](gui_window* win, const gui_input& input) {
@@ -319,7 +319,7 @@ void run_view(imageview_state* state) {
   };
 
   // run ui
-  run_ui({1280 + 320, 720}, "yimview", callbacks);
+  run_ui({1280 + 320, 720}, "yimview", callbacks, 320, widgets_left, bFullscreen);
 }
 
 }  // namespace yocto

@@ -133,7 +133,7 @@ struct gui_callbacks {
 // run the user interface with the give callbacks
 void run_ui(const vec2i& size, const string& title,
     const gui_callbacks& callbaks, int widgets_width = 320,
-    bool widgets_left = true);
+    bool widgets_left=true, bool bFullscreen=false);
 
 }  // namespace yocto
 
@@ -165,7 +165,7 @@ struct gui_window {
 
 // Windows initialization
 void init_window(gui_window* win, const vec2i& size, const string& title,
-    bool widgets, int widgets_width = 320, bool widgets_left = true);
+    bool widgets, int widgets_width = 320, bool widgets_left = true, bool bFullscreen = false);
 
 // Window cleanup
 void clear_window(gui_window* win);

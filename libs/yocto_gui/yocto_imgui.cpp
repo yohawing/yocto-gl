@@ -80,11 +80,11 @@ namespace yocto {
 
 // run the user interface with the give callbacks
 void run_ui(const vec2i& size, const string& title,
-    const gui_callbacks& callbacks, int widgets_width, bool widgets_left) {
+    const gui_callbacks& callbacks, int widgets_width, bool widgets_left, bool bFullscreen) {
   auto win_guard = std::make_unique<gui_window>();
   auto win       = win_guard.get();
   init_window(win, size, title, (bool)callbacks.widgets_cb, widgets_width,
-      widgets_left);
+      widgets_left, bFullscreen);
 
   set_init_callback(win, callbacks.init_cb);
   set_clear_callback(win, callbacks.clear_cb);
@@ -146,7 +146,7 @@ static void draw_window(gui_window* win) {
 }
 
 void init_window(gui_window* win, const vec2i& size, const string& title,
-    bool widgets, int widgets_width, bool widgets_left) {
+    bool widgets, int widgets_width, bool widgets_left, bool bFullscreen) {
   // init glfw
   if (!glfwInit())
     throw std::runtime_error("cannot initialize windowing system");
@@ -159,7 +159,10 @@ void init_window(gui_window* win, const vec2i& size, const string& title,
 
   // create window
   win->title = title;
-  win->win = glfwCreateWindow(size.x, size.y, title.c_str(), nullptr, nullptr);
+  if (bFullscreen)
+	win->win = glfwCreateWindow(size.x, size.y, title.c_str(), glfwGetPrimaryMonitor(), nullptr);
+  else
+    win->win = glfwCreateWindow(size.x, size.y, title.c_str(), nullptr, nullptr);
   if (win->win == nullptr)
     throw std::runtime_error{"cannot initialize windowing system"};
   glfwMakeContextCurrent(win->win);
