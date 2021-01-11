@@ -1926,24 +1926,6 @@ void trace_start(trace_state* state, const trace_scene* scene,
     });
   
   
-  state->worker = std::async(std::launch::async, [=]() {
-      
-      for (auto j = 0; j < state->render.height(); j++) {
-          for (auto i = 0; i < state->render.width(); i++) {
-            
-            if( i <= state->render.width()/2 ) continue;
-            trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
-            
-          }
-      }
-//      if (progress_cb) progress_cb("trace image", s, 16);
-      if (image_cb) image_cb(state->render, 1, params.samples);
-    
-  });
-  
-  
-  
-  
   // start renderer
 //  state->worker = std::async(std::launch::async, [=]() {
 //    for (auto sample = 0; sample < params.samples; sample++) {
@@ -1967,6 +1949,30 @@ void trace_start(trace_state* state, const trace_scene* scene,
 //    if (image_cb) image_cb(state->render, params.samples, params.samples);
 //
 //  });
+}
+
+void trace_step(trace_state* state, const trace_scene* scene,
+    const trace_camera* camera, const trace_bvh* bvh,
+    const trace_lights* lights, const trace_params& params,
+    const progress_callback& progress_cb, const image_callback& image_cb,
+    const async_callback& async_cb) {
+
+      
+      state->worker = std::async(std::launch::async, [=]() {
+
+        for (auto j = 0; j < state->render.height(); j++) {
+            for (auto i = 0; i < state->render.width(); i++) {
+
+              if( i > state->render.width()/2 ) continue;
+              trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
+
+            }
+        }
+        if (progress_cb) progress_cb("trace image", 1, 16);
+        if (image_cb) image_cb(state->render, 1, params.samples);
+
+    });
+
 }
 
 

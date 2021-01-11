@@ -263,7 +263,6 @@ int run_view(const view_params& params) {
   
   
   
-  
   // set callback
   // Viewerの変更のコールバック
   set_callback(viewer,
@@ -319,7 +318,7 @@ int run_view(const view_params& params) {
 //          pan.x                                  = -pan.x;
 //          std::tie(camera->frame, camera->focus) = camera_turntable(
 //              camera->frame, camera->focus, rotate, dolly, pan);
-          trace_start(
+          trace_step(
               state, scene, camera, bvh, lights, params,
               [viewer](const string& message, int sample, int nsamples) {
                 set_param(viewer, "render", "sample", to_json(sample),
@@ -368,11 +367,12 @@ int main(int argc, const char* argv[]) {
   // parse cli
   auto params = app_params{};
   
-  params.view.samples = 16;
-  params.view.resolution = 640;
+  params.view.samples = 4;
+  params.view.resolution = 960;
   params.view.pratio = 2;
-  
-  parse_cli(params, "Render images from scenes", argc, argv);
+  params.view.scene = "../../tests/environments1/environments1.json";
+
+  // parse_cli(params, "Render images from scenes", argc, argv);
 
   // dispatch commands
     
