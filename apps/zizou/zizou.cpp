@@ -171,6 +171,8 @@ struct view_params : trace_params {
   bool   savebatch = false;
 };
 
+
+
 // Json IO
 void serialize_value(json_mode mode, json_value& json, view_params& value,
     const string& description) {
@@ -245,6 +247,7 @@ int run_view(const view_params& params) {
   auto state_guard = std::make_unique<trace_state>();
   auto state       = state_guard.get();
 
+
   // render start
   trace_start(
       state, scene, camera, bvh, lights, params,
@@ -261,8 +264,7 @@ int run_view(const view_params& params) {
   set_params(
       viewer, "render", to_json(params), to_schema(params, "Render params"));
   
-  
-  
+ 
   // set callback
   // Viewerの変更のコールバック
   set_callback(viewer,
@@ -284,25 +286,8 @@ int run_view(const view_params& params) {
           pprms.resolution /= params.pratio;
           pprms.samples = 1;
           auto preview  = trace_image(scene, camera, bvh, lights, pprms);
-          
-          // パストレが回る（１Sample計算終わったらCallbackがよばれる）
-//            trace_start(
-//              state, scene, camera, bvh, lights, params,
-//
-//            // progress callback
-//              [viewer](const string& message, int sample, int nsamples) {
-//                set_param(viewer, "render", "sample", to_json(sample),
-//                    to_schema(sample, "Current sample"));
-//                print_progress(message, sample, nsamples);
-//              },
-//            // image callback
-//              [viewer](const image<vec4f>& render, int current, int total) {
-//                set_image(viewer, "render", render);
-//              });
-//
             
         }
-    // 視点移動のコード
         else if ((input.mouse_left || input.mouse_right) &&
                    input.mouse_pos != input.mouse_last) {
 //          trace_stop(state);
@@ -318,6 +303,10 @@ int run_view(const view_params& params) {
 //          pan.x                                  = -pan.x;
 //          std::tie(camera->frame, camera->focus) = camera_turntable(
 //              camera->frame, camera->focus, rotate, dolly, pan);
+
+          state->brush.x = input.mouse_pos.x - state ->brush.w/2;
+          state->brush.y = input.mouse_pos.y - state->brush.h/2;
+
           trace_step(
               state, scene, camera, bvh, lights, params,
               [viewer](const string& message, int sample, int nsamples) {

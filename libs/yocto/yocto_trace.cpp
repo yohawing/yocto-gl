@@ -1912,64 +1912,40 @@ void trace_start(trace_state* state, const trace_scene* scene,
 //
     state->worker = std::async(std::launch::async, [=]() {
 
-        for (auto j = 0; j < state->render.height(); j++) {
-            for (auto i = 0; i < state->render.width(); i++) {
+        parallel_for(
+         state->render.width(), state->render.height(), [&](int i, int j) {
+           if (state->stop) return;
+           trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
+           
+         });
 
-              if( i > state->render.width()/2 ) continue;
-              trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
-
-            }
-        }
-  //      if (progress_cb) progress_cb("trace image", s, 16);
-        if (image_cb) image_cb(state->render, 1, params.samples);
-
+        if (progress_cb) progress_cb("trace image", 1, 1);
+        if (image_cb) image_cb(state->render, 1, 1);
     });
   
   
-  // start renderer
-//  state->worker = std::async(std::launch::async, [=]() {
-//    for (auto sample = 0; sample < params.samples; sample++) {
-//      if (state->stop) return;
-//      if (progress_cb) progress_cb("trace image", sample, params.samples);
-//
-//      parallel_for(
-//          state->render.width(), state->render.height(), [&](int i, int j) {
-//            if (state->stop) return;
-//            trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
-//            if (async_cb)
-//              async_cb(state->render, sample, params.samples, {i, j});
-//          });
-//
-//
-//      if (image_cb) image_cb(state->render, sample + 1, params.samples);
-//    }
-//
-//
-//    if (progress_cb) progress_cb("trace image", params.samples, params.samples);
-//    if (image_cb) image_cb(state->render, params.samples, params.samples);
-//
-//  });
 }
 
+
+// trace 1 sample
 void trace_step(trace_state* state, const trace_scene* scene,
     const trace_camera* camera, const trace_bvh* bvh,
     const trace_lights* lights, const trace_params& params,
     const progress_callback& progress_cb, const image_callback& image_cb,
     const async_callback& async_cb) {
 
+    printf("%d", state->brush.w);
       
-      state->worker = std::async(std::launch::async, [=]() {
+    state->worker = std::async(std::launch::async, [=]() {
 
-        for (auto j = 0; j < state->render.height(); j++) {
-            for (auto i = 0; i < state->render.width(); i++) {
-
-              if( i > state->render.width()/2 ) continue;
-              trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
-
-            }
-        }
-        if (progress_cb) progress_cb("trace image", 1, 16);
-        if (image_cb) image_cb(state->render, 1, params.samples);
+      parallel_for(
+        state->brush.w, state->brush.h, [&](int i, int j) {
+          if (state->stop) return;
+          trace_sample(state, scene, camera, bvh, lights, {i + state->brush.x, j + state->brush.y}, params);
+          
+        });
+      if (progress_cb) progress_cb("trace image", 1,1);
+      if (image_cb) image_cb(state->render , 1, 1);
 
     });
 
