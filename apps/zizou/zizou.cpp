@@ -161,7 +161,6 @@ void init_scene(trace_scene* scene, sceneio_scene* ioscene,
   camera = camera_map.at(iocamera);
 }
 
-
 // convert params
 struct view_params : trace_params {
   string scene     = "scene.json";
@@ -170,8 +169,6 @@ struct view_params : trace_params {
   bool   addsky    = false;
   bool   savebatch = false;
 };
-
-
 
 // Json IO
 void serialize_value(json_mode mode, json_value& json, view_params& value,
@@ -195,10 +192,41 @@ int run_view(const view_params& params) {
   return print_fatal("Opengl not compiled");
 }
 
+
+
 #else
+
+// draw brush for canvas buffer
+void draw_brush(trace_state* state, imageview_state* viewer, float threshold) {
+  parallel_for(state->brush.w, state->brush.h, [&](int i, int j) {
+    int _i = i + state->brush.x;
+    int _j = j + state->brush.y;
+    vec2i _ij = {_i, _j};
+
+    
+    float rnd = rand1f(state->rngs[{1, 1}]);
+
+    vec2f a = {float(_i - state->brush.w / 2), float(_j - state->brush.h / 2)};
+    vec2f b = {float(state->brush.x), float(state->brush.y)};
+
+    float dist = distance(a, b);
+    float value = clamp(1 - dist / state->brush.w * 2, 0.0, 1.0);
+    //printf("%f \n", value);
+    if (value - rnd < threshold) return;
+    state->canvas[_ij] += {1, 0, 0, 1};
+
+  });
+
+  set_image(viewer, "canvas", state->canvas);
+
+}
+
 
 // interactive render
 int run_view(const view_params& params) {
+
+#pragma region Setting scene
+
   // open viewer
   auto viewer_guard = make_imageview("yimage");
   auto viewer       = viewer_guard.get();
@@ -243,12 +271,14 @@ int run_view(const view_params& params) {
     print_info("no lights presents, image will be black");
   }
 
+#pragma endregion
+
   // init state
   auto state_guard = std::make_unique<trace_state>();
   auto state       = state_guard.get();
 
-
   // render start
+  // reset canvas
   trace_start(
       state, scene, camera, bvh, lights, params,
       [viewer](const string& message, int sample, int nsamples) {
@@ -256,84 +286,84 @@ int run_view(const view_params& params) {
             to_schema(sample, "Current sample"));
         print_progress(message, sample, nsamples);
       },
-      [viewer](const image<vec4f>& render, int current, int total) {
+      [viewer](const image<vec4f>& render, const image<vec4f>& canvas,
+          int current, int total) {
         set_image(viewer, "render", render);
+        set_image(viewer, "canvas", canvas);
       });
 
   // show rendering params
   set_params(
       viewer, "render", to_json(params), to_schema(params, "Render params"));
-  
- 
+
   // set callback
   // Viewerの変更のコールバック
   set_callback(viewer,
       [state, scene, camera, bvh, lights, viewer, &params](const string& name,
           const json_value& uiparams, const gui_input& input) {
-        
-      if (name != "render") return;
-      
-      
+        if (name != "render" && name != "canvas") return;
+
         if (!uiparams.is_null()) {
           trace_stop(state);
-            
+
           (view_params&)params = from_json<view_params>(uiparams);
           // show rendering params
           set_params(viewer, "render", to_json(params),
               to_schema(params, "Render params"));
-          
+
           auto pprms = params;
           pprms.resolution /= params.pratio;
           pprms.samples = 1;
           auto preview  = trace_image(scene, camera, bvh, lights, pprms);
-            
-        }
-        else if ((input.mouse_left || input.mouse_right) &&
+
+
+        } else if ((input.mouse_left || input.mouse_right) &&
                    input.mouse_pos != input.mouse_last) {
-//          trace_stop(state);
-//          auto dolly  = 0.0f;
-//          auto pan    = zero2f;
-//          auto rotate = zero2f;
-//          if (input.mouse_left && !input.modifier_shift)
-//            rotate = (input.mouse_pos - input.mouse_last) / 100.0f;
-//          if (input.mouse_right)
-//            dolly = (input.mouse_pos.x - input.mouse_last.x) / 100.0f;
-//          if (input.mouse_left && input.modifier_shift)
-//            pan = (input.mouse_pos - input.mouse_last) * camera->focus / 200.0f;
-//          pan.x                                  = -pan.x;
-//          std::tie(camera->frame, camera->focus) = camera_turntable(
-//              camera->frame, camera->focus, rotate, dolly, pan);
+          //          trace_stop(state);
+          //          auto dolly  = 0.0f;
+          //          auto pan    = zero2f;
+          //          auto rotate = zero2f;
+          //          if (input.mouse_left && !input.modifier_shift)
+          //            rotate = (input.mouse_pos - input.mouse_last) / 100.0f;
+          //          if (input.mouse_right)
+          //            dolly = (input.mouse_pos.x - input.mouse_last.x) /
+          //            100.0f;
+          //          if (input.mouse_left && input.modifier_shift)
+          //            pan = (input.mouse_pos - input.mouse_last) *
+          //            camera->focus / 200.0f;
+          //          pan.x                                  = -pan.x;
+          //          std::tie(camera->frame, camera->focus) = camera_turntable(
+          //              camera->frame, camera->focus, rotate, dolly, pan);
 
-          state->brush.x = input.mouse_pos.x - state ->brush.w/2;
-          state->brush.y = input.mouse_pos.y - state->brush.h/2;
+          printf("mouse_pos__ x: %f, y: %f \n", input.mouse_pos.x,
+              input.mouse_pos.y);
+          state->brush.x = input.mouse_pos.x - state->brush.w / 2;
+          state->brush.y = input.mouse_pos.y - state->brush.h / 2;
 
-          trace_step(
-              state, scene, camera, bvh, lights, params,
-              [viewer](const string& message, int sample, int nsamples) {
-                set_param(viewer, "render", "sample", to_json(sample),
-                    to_schema(sample, "Current sample"));
-                print_progress(message, sample, nsamples);
-              },
-              [viewer](const image<vec4f>& render, int current, int total) {
-                set_image(viewer, "render", render);
-              });
+          draw_brush(state, viewer, 0.1);
+
+          /* trace_step(
+               state, scene, camera, bvh, lights, params,
+               [viewer](const string& message, int sample, int nsamples) {
+                 set_param(viewer, "render", "sample", to_json(sample),
+                     to_schema(sample, "Current sample"));
+                 print_progress(message, sample, nsamples);
+               },
+               [viewer](const image<vec4f>& render, int current, int total) {
+                 set_image(viewer, "render", render);
+               });*/
         }
       });
 
   // run view
-  bool bProduction = false; // ここをtrueにするとフルスクリーン
+  bool bProduction = false;  // ここをtrueにするとフルスクリーン
   if (bProduction)
-    run_view(viewer, true, true);
+    yocto::run_view(viewer, {3960, 2160} , false, true);
   else
-    run_view(viewer, true);
+    yocto::run_view(viewer, {1920, 1080}, true, false);
 
   // stop
   trace_stop(state);
-
-  // // save image
-  // print_progress("save image", 0, 1);
-  // if (!save_image(params.output, render, ioerror)) return
-  // print_fatal(ioerror); print_progress("save image", 1, 1);
 
   // done
   return 0;
@@ -341,10 +371,12 @@ int run_view(const view_params& params) {
 
 #endif
 
+
+
 struct app_params {
-  string        command = "view";
-//  render_params render  = {};
-  view_params   view    = {};
+  string command = "view";
+  //  render_params render  = {};
+  view_params view = {};
 };
 
 // Json IO
@@ -352,23 +384,22 @@ void serialize_value(json_mode mode, json_value& json, app_params& value,
     const string& description) {
   serialize_object(mode, json, value, description);
   serialize_command(mode, json, value.command, "command", "Command.");
-//  serialize_property(mode, json, value.render, "render", "Render offline.");
+  //  serialize_property(mode, json, value.render, "render", "Render offline.");
   serialize_property(mode, json, value.view, "view", "Render interactively.");
 }
 
 int main(int argc, const char* argv[]) {
   // parse cli
   auto params = app_params{};
-  
-  params.view.samples = 4;
-  params.view.resolution = 960;
-  params.view.pratio = 2;
-  params.view.scene = "../../tests/environments1/environments1.json";
+
+  params.view.samples    = 4;
+  params.view.resolution = 1920;
+  params.view.pratio     = 2;
+  params.view.scene      = "../../tests/environments1/environments1.json";
 
   // parse_cli(params, "Render images from scenes", argc, argv);
 
   // dispatch commands
-    
+
   return run_view(params.view);
- 
 }

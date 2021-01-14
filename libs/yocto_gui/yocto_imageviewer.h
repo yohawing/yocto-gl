@@ -67,7 +67,8 @@ struct imageview_state;
 unique_ptr<imageview_state> make_imageview(const string& title);
 
 // Run view
-void run_view(imageview_state* viewer, bool widgets_left=true, bool bFullscreen=false);
+void run_view(imageview_state* viewer, const vec2i& window_size,
+    bool widgets_left = true, bool bFullscreen = false);
 
 // Set image
 void set_image(imageview_state* viewer, const string& name,

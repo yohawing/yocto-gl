@@ -1763,6 +1763,7 @@ void init_state(trace_state* state, const trace_scene* scene,
   state->accumulation.assign(image_size, zero4f);
   state->samples.assign(image_size, 0);
   state->rngs.assign(image_size, {});
+  state->canvas.assign(image_size, zero4f);
   auto rng_ = make_rng(1301081);
   for (auto& rng : state->rngs) {
     rng = make_rng(params.seed, rand1i(rng_, 1 << 31) / 2 + 1);
@@ -1876,7 +1877,7 @@ image<vec4f> trace_image(const trace_scene* scene, const trace_camera* camera,
             trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
           });
     }
-    if (image_cb) image_cb(state->render, sample + 1, params.samples);
+    if (image_cb) image_cb(state->render, state->canvas, sample + 1, params.samples);
   }
 
   if (progress_cb) progress_cb("trace image", params.samples, params.samples);
@@ -1917,10 +1918,11 @@ void trace_start(trace_state* state, const trace_scene* scene,
            if (state->stop) return;
            trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
            
+           
          });
 
         if (progress_cb) progress_cb("trace image", 1, 1);
-        if (image_cb) image_cb(state->render, 1, 1);
+        if (image_cb) image_cb(state->render,state->canvas, 1, 1);
     });
   
   
@@ -1945,7 +1947,7 @@ void trace_step(trace_state* state, const trace_scene* scene,
           
         });
       if (progress_cb) progress_cb("trace image", 1,1);
-      if (image_cb) image_cb(state->render , 1, 1);
+      if (image_cb) image_cb(state->render, state->canvas, 1, 1);
 
     });
 
