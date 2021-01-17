@@ -458,8 +458,8 @@ const auto trace_bvh_names        = vector<string>{
 using progress_callback =
     function<void(const string& message, int current, int total)>;
 // Callback used to report partially computed image
-using image_callback =
-    function<void(const image<vec4f>& render, int current, int total)>;
+using image_callback = function<void(const image<vec4f>& render,
+    const image<vec4f>& canvas, int current, int total)>;
 
 // Apply subdivision and displacement rules.
 void tesselate_shapes(
@@ -522,10 +522,10 @@ bool is_sampler_lit(const trace_params& params);
 
 // render area with mouse
 struct trace_brush {
-  int w = 100;
-  int h = 100;
-  int x = 100;
-  int y = 100;
+  int w = 200;
+  int h = 200;
+  int x = 0;
+  int y = 0;
 
 };
 
@@ -533,6 +533,7 @@ struct trace_brush {
 struct trace_state {
   image<vec4f>     render       = {};
   image<vec4f>     accumulation = {};
+  image<vec4f>     canvas       = {};
   image<int>       samples      = {};
   image<rng_state> rngs         = {};
   future<void>     worker       = {};  // async
