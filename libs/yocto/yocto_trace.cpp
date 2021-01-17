@@ -1941,7 +1941,11 @@ void trace_step(trace_state* state, const trace_scene* scene,
       parallel_for(
         state->brush.w, state->brush.h, [&](int i, int j) {
           if (state->stop) return;
-          trace_sample(state, scene, camera, bvh, lights, {i + state->brush.x, j + state->brush.y}, params);
+          const int pixel_x = i + state->brush.x;
+          const int pixel_y = j + state->brush.y;
+          if (pixel_x < 0 || pixel_x > state->render.width()-1 || pixel_y < 0 || pixel_y > state->render.height()-1)
+            return;
+          trace_sample(state, scene, camera, bvh, lights, {pixel_x, pixel_y}, params);
           
         });
       if (progress_cb) progress_cb("trace image", 1,1);
