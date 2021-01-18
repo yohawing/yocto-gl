@@ -402,7 +402,7 @@ int main(int argc, const char* argv[]) {
   params.view.samples    = 32;
   params.view.resolution = 1920;
   params.view.pratio     = 2;
-  params.view.scene      = "../../tests/materials1/materials1.json";
+  params.view.scene      = "../../tests/environments1/environments1.json";
 
   // parse_cli(params, "Render images from scenes", argc, argv);
 
