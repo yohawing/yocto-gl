@@ -346,7 +346,7 @@ int run_view(const view_params& params) {
           state->brush.x = input.mouse_pos.x - state->brush.w / 2;
           state->brush.y = input.mouse_pos.y - state->brush.h / 2;
 
-          draw_brush(state, viewer, 0.75);
+          draw_brush(state, viewer, 0.5);
 
           trace_step(
                state, scene, camera, bvh, lights, params,
