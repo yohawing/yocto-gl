@@ -776,10 +776,10 @@ trace_vsdf eval_vsdf(
   auto trdepth      = material->trdepth;
 
   // factors
-  auto vsdf       = trace_vsdf{};
-  vsdf.density    = ((transmission != 0 || translucency != 0) && !thin)
-                        ? -log(clamp(color, 0.0001f, 1.0f)) / trdepth
-                        : zero3f;
+  auto vsdf    = trace_vsdf{};
+  vsdf.density = ((transmission != 0 || translucency != 0) && !thin)
+                     ? -log(clamp(color, 0.0001f, 1.0f)) / trdepth
+                     : zero3f;
   vsdf.scatter    = scattering;
   vsdf.anisotropy = scanisotropy;
 
@@ -1150,7 +1150,7 @@ static vec3f sample_lights(const trace_scene* scene, const trace_lights* lights,
     auto instance = light->instance;
     auto element  = sample_discrete_cdf(light->elements_cdf, rel);
     auto uv       = (!instance->shape->triangles.empty()) ? sample_triangle(ruv)
-                                                          : ruv;
+                                                    : ruv;
     auto lposition = eval_position(light->instance, element, uv);
     return normalize(lposition - position);
   } else if (light->environment != nullptr) {
@@ -1744,9 +1744,9 @@ void trace_sample(trace_state* state, const trace_scene* scene,
     sample = sample * (params.clamp / max(sample));
   state->accumulation[ij] += sample;
   state->samples[ij] += 1;
-  auto radiance     = state->accumulation[ij].w != 0
-                          ? xyz(state->accumulation[ij]) / state->accumulation[ij].w
-                          : zero3f;
+  auto radiance = state->accumulation[ij].w != 0
+                      ? xyz(state->accumulation[ij]) / state->accumulation[ij].w
+                      : zero3f;
   auto coverage     = state->accumulation[ij].w / state->samples[ij];
   state->render[ij] = {radiance.x, radiance.y, radiance.z, coverage};
 }
@@ -1877,7 +1877,8 @@ image<vec4f> trace_image(const trace_scene* scene, const trace_camera* camera,
             trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
           });
     }
-    if (image_cb) image_cb(state->render, state->canvas, sample + 1, params.samples);
+    if (image_cb)
+      image_cb(state->render, state->canvas, sample + 1, params.samples);
   }
 
   if (progress_cb) progress_cb("trace image", params.samples, params.samples);
@@ -1895,39 +1896,34 @@ void trace_start(trace_state* state, const trace_scene* scene,
   state->stop   = false;
 
   // render preview
-//  if (progress_cb) progress_cb("trace preview", 0, params.samples);
-//  auto pprms = params;
-//  pprms.resolution /= params.pratio;
-//  pprms.samples = 1;
-//  auto preview  = trace_image(scene, camera, bvh, lights, pprms);
-//  for (auto j = 0; j < state->render.height(); j++) {
-//    for (auto i = 0; i < state->render.width(); i++) {
-//      auto pi               = clamp(i / params.pratio, 0, preview.width() - 1),
-//           pj               = clamp(j / params.pratio, 0, preview.height() - 1);
-//      state->render[{i, j}] = preview[{pi, pj}];
-//    }
-//  }
-//  if (image_cb) image_cb(state->render, 0, params.samples);
-  
-  
-//
-    state->worker = std::async(std::launch::async, [=]() {
+  //  if (progress_cb) progress_cb("trace preview", 0, params.samples);
+  //  auto pprms = params;
+  //  pprms.resolution /= params.pratio;
+  //  pprms.samples = 1;
+  //  auto preview  = trace_image(scene, camera, bvh, lights, pprms);
+  //  for (auto j = 0; j < state->render.height(); j++) {
+  //    for (auto i = 0; i < state->render.width(); i++) {
+  //      auto pi               = clamp(i / params.pratio, 0, preview.width() -
+  //      1),
+  //           pj               = clamp(j / params.pratio, 0, preview.height() -
+  //           1);
+  //      state->render[{i, j}] = preview[{pi, pj}];
+  //    }
+  //  }
+  //  if (image_cb) image_cb(state->render, 0, params.samples);
 
-        parallel_for(
-         state->render.width(), state->render.height(), [&](int i, int j) {
-           if (state->stop) return;
-           trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
-           
-           
-         });
+  //
+  state->worker = std::async(std::launch::async, [=]() {
+    parallel_for(
+        state->render.width(), state->render.height(), [&](int i, int j) {
+          if (state->stop) return;
+          trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
+        });
 
-        if (progress_cb) progress_cb("trace image", 1, 1);
-        if (image_cb) image_cb(state->render,state->canvas, 1, 1);
-    });
-  
-  
+    if (progress_cb) progress_cb("trace image", 1, 1);
+    if (image_cb) image_cb(state->render, state->canvas, 1, 1);
+  });
 }
-
 
 // trace 1 sample
 void trace_step(trace_state* state, const trace_scene* scene,
@@ -1935,24 +1931,22 @@ void trace_step(trace_state* state, const trace_scene* scene,
     const trace_lights* lights, const trace_params& params,
     const progress_callback& progress_cb, const image_callback& image_cb,
     const async_callback& async_cb) {
+  // printf("%d", state->brush.w);
 
-    printf("%d", state->brush.w);
-      
-    state->worker = std::async(std::launch::async, [=]() {
-
-      parallel_for(
-        state->brush.w, state->brush.h, [&](int i, int j) {
-          if (state->stop) return;
-          trace_sample(state, scene, camera, bvh, lights, {i + state->brush.x, j + state->brush.y}, params);
-          
-        });
-      if (progress_cb) progress_cb("trace image", 1,1);
-      if (image_cb) image_cb(state->render, state->canvas, 1, 1);
-
+  state->worker = std::async(std::launch::async, [=]() {
+    parallel_for(state->brush.w, state->brush.h, [&](int i, int j) {
+      if (state->stop) return;
+        vec2i ij = {i + state->brush.x, j + state->brush.y};
+      if (state->canvas[ij].x > 0.9) {
+          trace_sample(state, scene, camera, bvh, lights,
+          ij, params);
+        state->canvas[ij].x = 0;
+      }
     });
-
+    if (progress_cb) progress_cb("trace image", 1, 1);
+    if (image_cb) image_cb(state->render, state->canvas, 1, 1);
+  });
 }
-
 
 void trace_stop(trace_state* state) {
   if (state == nullptr) return;

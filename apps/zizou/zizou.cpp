@@ -209,15 +209,16 @@ void draw_brush(trace_state* state, imageview_state* viewer, float threshold) {
     vec2f a = {float(_i - state->brush.w / 2), float(_j - state->brush.h / 2)};
     vec2f b = {float(state->brush.x), float(state->brush.y)};
 
+    // このへんで落ちるので改善する
     float dist = distance(a, b);
     float value = clamp(1 - dist / state->brush.w * 2, 0.0, 1.0);
     //printf("%f \n", value);
     if (value - rnd < threshold) return;
-    state->canvas[_ij] += {1, 0, 0, 1};
+    state->canvas[_ij] = {1, 0, 0, 1};
 
   });
 
-  set_image(viewer, "canvas", state->canvas);
+  //set_image(viewer, "canvas", state->canvas);
 
 }
 
@@ -342,16 +343,19 @@ int run_view(const view_params& params) {
 
           draw_brush(state, viewer, 0.1);
 
-          /* trace_step(
+          trace_step(
                state, scene, camera, bvh, lights, params,
                [viewer](const string& message, int sample, int nsamples) {
                  set_param(viewer, "render", "sample", to_json(sample),
                      to_schema(sample, "Current sample"));
                  print_progress(message, sample, nsamples);
                },
-               [viewer](const image<vec4f>& render, int current, int total) {
+              [viewer](const image<vec4f>& render, const image<vec4f>& canvas,
+                  int current,
+                  int total) {
                  set_image(viewer, "render", render);
-               });*/
+                 set_image(viewer, "canvas", canvas);
+               });
         }
       });
 
@@ -392,10 +396,10 @@ int main(int argc, const char* argv[]) {
   // parse cli
   auto params = app_params{};
 
-  params.view.samples    = 4;
+  params.view.samples    = 32;
   params.view.resolution = 1920;
   params.view.pratio     = 2;
-  params.view.scene      = "../../tests/environments1/environments1.json";
+  params.view.scene      = "../../tests/materials1/materials1.json";
 
   // parse_cli(params, "Render images from scenes", argc, argv);
 
