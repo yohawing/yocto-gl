@@ -293,7 +293,7 @@ int run_view(const view_params& params) {
       [viewer](const image<vec4f>& render, const image<vec4f>& canvas,
           int current, int total) {
         set_image(viewer, "render", render);
-        set_image(viewer, "canvas", canvas);
+        //set_image(viewer, "canvas", canvas);
       });
 
   // show rendering params
@@ -341,10 +341,12 @@ int run_view(const view_params& params) {
 
           printf("mouse_pos__ x: %f, y: %f \n", input.mouse_pos.x,
               input.mouse_pos.y);
+          state->brush.w = 300;
+          state->brush.h = 300;
           state->brush.x = input.mouse_pos.x - state->brush.w / 2;
           state->brush.y = input.mouse_pos.y - state->brush.h / 2;
 
-          draw_brush(state, viewer, 0.1);
+          draw_brush(state, viewer, 0.75);
 
           trace_step(
                state, scene, camera, bvh, lights, params,
@@ -357,7 +359,7 @@ int run_view(const view_params& params) {
                   int current,
                   int total) {
                  set_image(viewer, "render", render);
-                 set_image(viewer, "canvas", canvas);
+                 //set_image(viewer, "canvas", canvas);
                });
         }
       });
@@ -365,7 +367,7 @@ int run_view(const view_params& params) {
   // run view
   bool bProduction = false;  // ここをtrueにするとフルスクリーン
   if (bProduction)
-    yocto::run_view(viewer, {3960, 2160} , false, true);
+    yocto::run_view(viewer, {1920, 1200} , false, true);
   else
     yocto::run_view(viewer, {1920, 1080}, true, false);
 
@@ -399,10 +401,10 @@ int main(int argc, const char* argv[]) {
   // parse cli
   auto params = app_params{};
 
-  params.view.samples    = 32;
+  params.view.samples    = 64;
   params.view.resolution = 1920;
   params.view.pratio     = 2;
-  params.view.scene      = "../../tests/environments1/environments1.json";
+  params.view.scene      = "../../tests/zizo1/zizou1.json";
 
   // parse_cli(params, "Render images from scenes", argc, argv);
 

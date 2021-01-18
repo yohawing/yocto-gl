@@ -1885,6 +1885,7 @@ image<vec4f> trace_image(const trace_scene* scene, const trace_camera* camera,
   return state->render;
 }
 
+
 // [experimental] Asynchronous interface
 void trace_start(trace_state* state, const trace_scene* scene,
     const trace_camera* camera, const trace_bvh* bvh,
@@ -1895,34 +1896,34 @@ void trace_start(trace_state* state, const trace_scene* scene,
   state->worker = {};
   state->stop   = false;
 
-  // render preview
-  //  if (progress_cb) progress_cb("trace preview", 0, params.samples);
-  //  auto pprms = params;
-  //  pprms.resolution /= params.pratio;
-  //  pprms.samples = 1;
-  //  auto preview  = trace_image(scene, camera, bvh, lights, pprms);
-  //  for (auto j = 0; j < state->render.height(); j++) {
-  //    for (auto i = 0; i < state->render.width(); i++) {
-  //      auto pi               = clamp(i / params.pratio, 0, preview.width() -
-  //      1),
-  //           pj               = clamp(j / params.pratio, 0, preview.height() -
-  //           1);
-  //      state->render[{i, j}] = preview[{pi, pj}];
-  //    }
-  //  }
-  //  if (image_cb) image_cb(state->render, 0, params.samples);
+  //render preview
+   if (progress_cb) progress_cb("trace preview", 0, params.samples);
+   auto pprms = params;
+   pprms.resolution /= params.pratio;
+   pprms.samples = 1;
+   auto preview  = trace_image(scene, camera, bvh, lights, pprms);
+   for (auto j = 0; j < state->render.height(); j++) {
+     for (auto i = 0; i < state->render.width(); i++) {
+       auto pi = clamp(i / params.pratio, 0, preview.width() -
+       1),
+            pj = clamp(j / params.pratio, 0, preview.height() -
+            1);
+       state->render[{i, j}] = preview[{pi, pj}];
+     }
+   }
+   if (image_cb) image_cb(state->render, state->canvas, 0, params.samples);
 
   //
-  state->worker = std::async(std::launch::async, [=]() {
-    parallel_for(
-        state->render.width(), state->render.height(), [&](int i, int j) {
-          if (state->stop) return;
-          trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
-        });
+  // state->worker = std::async(std::launch::async, [=]() {
+  //   parallel_for(
+  //       state->render.width(), state->render.height(), [&](int i, int j) {
+  //         if (state->stop) return;
+  //         trace_sample(state, scene, camera, bvh, lights, {i, j}, params);
+  //       });
 
-    if (progress_cb) progress_cb("trace image", 1, 1);
-    if (image_cb) image_cb(state->render, state->canvas, 1, 1);
-  });
+  //   if (progress_cb) progress_cb("trace image", 1, 1);
+  //   if (image_cb) image_cb(state->render, state->canvas, 1, 1);
+  // });
 }
 
 // trace 1 sample

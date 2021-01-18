@@ -1,0 +1,49 @@
+{
+  "asset": {
+    "generator": "Yocto/GL - https://github.com/xelatihy/yocto-gl",
+    "copyright": "yohawing"
+  },
+  "cameras": {
+    
+  },
+  "environments": {
+    "sky": {
+      "emission": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "emission_tex": "sky"
+    }
+  },
+  "materials": {
+    "zizou1": {
+      "color": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "color_tex": "texture_1001"
+    }
+  },
+  "instances": {
+    "zizou1": {
+      "frame": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        -1.0,
+        -0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0
+      ],
+      "shape": "zizou1",
+      "material": "zizou1"
+    }
+  }
+}
