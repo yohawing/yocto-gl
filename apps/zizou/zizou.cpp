@@ -201,6 +201,9 @@ void draw_brush(trace_state* state, imageview_state* viewer, float threshold) {
   parallel_for(state->brush.w, state->brush.h, [&](int i, int j) {
     int _i = i + state->brush.x;
     int _j = j + state->brush.y;
+
+    if (_i < 0 || _i > state->render.width() - 1 || _j < 0 || _j > state->render.height() - 1)
+      return;
     vec2i _ij = {_i, _j};
 
     
