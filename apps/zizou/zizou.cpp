@@ -192,8 +192,6 @@ int run_view(const view_params& params) {
   return print_fatal("Opengl not compiled");
 }
 
-
-
 #else
 
 // draw brush for canvas buffer
@@ -202,29 +200,26 @@ void draw_brush(trace_state* state, imageview_state* viewer, float threshold) {
     int _i = i + state->brush.x;
     int _j = j + state->brush.y;
 
-    if (_i < 0 || _i > state->render.width() - 1 || _j < 0 || _j > state->render.height() - 1)
+    if (_i < 0 || _i > state->render.width() - 1 || _j < 0 ||
+        _j > state->render.height() - 1)
       return;
     vec2i _ij = {_i, _j};
 
-    
     float rnd = rand1f(state->rngs[{1, 1}]);
 
     vec2f a = {float(_i - state->brush.w / 2), float(_j - state->brush.h / 2)};
     vec2f b = {float(state->brush.x), float(state->brush.y)};
 
     // このへんで落ちるので改善する
-    float dist = distance(a, b);
+    float dist  = distance(a, b);
     float value = clamp(1 - dist / state->brush.w * 2, 0.0, 1.0);
-    //printf("%f \n", value);
+    // printf("%f \n", value);
     if (value - rnd < threshold) return;
     state->canvas[_ij] = {1, 0, 0, 1};
-
   });
 
-  //set_image(viewer, "canvas", state->canvas);
-
+  // set_image(viewer, "canvas", state->canvas);
 }
-
 
 // interactive render
 int run_view(const view_params& params) {
@@ -293,7 +288,7 @@ int run_view(const view_params& params) {
       [viewer](const image<vec4f>& render, const image<vec4f>& canvas,
           int current, int total) {
         set_image(viewer, "render", render);
-        //set_image(viewer, "canvas", canvas);
+        // set_image(viewer, "canvas", canvas);
       });
 
   // show rendering params
@@ -302,74 +297,80 @@ int run_view(const view_params& params) {
 
   // set callback
   // Viewerの変更のコールバック
-  set_callback(viewer,
-      [state, scene, camera, bvh, lights, viewer, &params](const string& name,
-          const json_value& uiparams, const gui_input& input) {
-        if (name != "render" && name != "canvas") return;
+  set_callback(viewer, [state, scene, camera, bvh, lights, viewer, &params](
+                           const string& name, const json_value& uiparams,
+                           const gui_input& input) {
+    if (name != "render" && name != "canvas") return;
 
-        if (!uiparams.is_null()) {
-          trace_stop(state);
+    if (!uiparams.is_null()) {
+      trace_stop(state);
 
-          (view_params&)params = from_json<view_params>(uiparams);
-          // show rendering params
-          set_params(viewer, "render", to_json(params),
-              to_schema(params, "Render params"));
+      (view_params&)params = from_json<view_params>(uiparams);
+      // show rendering params
+      set_params(viewer, "render", to_json(params),
+          to_schema(params, "Render params"));
 
-          auto pprms = params;
-          pprms.resolution /= params.pratio;
-          pprms.samples = 1;
-          auto preview  = trace_image(scene, camera, bvh, lights, pprms);
+      auto pprms = params;
+      pprms.resolution /= params.pratio;
+      pprms.samples = 1;
+      auto preview  = trace_image(scene, camera, bvh, lights, pprms);
 
+    } else if ((input.mouse_left || input.mouse_right) &&
+               input.mouse_pos != input.mouse_last) {
+      //          trace_stop(state);
+      //          auto dolly  = 0.0f;
+      //          auto pan    = zero2f;
+      //          auto rotate = zero2f;
+      //          if (input.mouse_left && !input.modifier_shift)
+      //            rotate = (input.mouse_pos - input.mouse_last) / 100.0f;
+      //          if (input.mouse_right)
+      //            dolly = (input.mouse_pos.x - input.mouse_last.x) /
+      //            100.0f;
+      //          if (input.mouse_left && input.modifier_shift)
+      //            pan = (input.mouse_pos - input.mouse_last) *
+      //            camera->focus / 200.0f;
+      //          pan.x                                  = -pan.x;
+      //          std::tie(camera->frame, camera->focus) = camera_turntable(
+      //              camera->frame, camera->focus, rotate, dolly, pan);
 
-        } else if ((input.mouse_left || input.mouse_right) &&
-                   input.mouse_pos != input.mouse_last) {
-          //          trace_stop(state);
-          //          auto dolly  = 0.0f;
-          //          auto pan    = zero2f;
-          //          auto rotate = zero2f;
-          //          if (input.mouse_left && !input.modifier_shift)
-          //            rotate = (input.mouse_pos - input.mouse_last) / 100.0f;
-          //          if (input.mouse_right)
-          //            dolly = (input.mouse_pos.x - input.mouse_last.x) /
-          //            100.0f;
-          //          if (input.mouse_left && input.modifier_shift)
-          //            pan = (input.mouse_pos - input.mouse_last) *
-          //            camera->focus / 200.0f;
-          //          pan.x                                  = -pan.x;
-          //          std::tie(camera->frame, camera->focus) = camera_turntable(
-          //              camera->frame, camera->focus, rotate, dolly, pan);
+      printf(
+          "mouse_pos__ x: %f, y: %f \n", input.mouse_pos.x, input.mouse_pos.y);
 
-          printf("mouse_pos__ x: %f, y: %f \n", input.mouse_pos.x,
-              input.mouse_pos.y);
-          state->brush.w = 300;
-          state->brush.h = 300;
-          state->brush.x = input.mouse_pos.x - state->brush.w / 2;
-          state->brush.y = input.mouse_pos.y - state->brush.h / 2;
+      int barHeight = int((input.window_size.y - state->render.height()) / 2);
 
+      state->brush.w     = 500;
+      state->brush.h     = 5
+          00;
+      state->brush.x     = int((input.mouse_pos.x - input.window_size.x / 2) +
+                           state->render.width() / 2 - (state->brush.w / 2));
+          state->brush.y = int((input.mouse_pos.y - input.window_size.y / 2) +
+                                   state->render.height() / 2 -
+                                   (state->brush.h / 2));
+          
           draw_brush(state, viewer, 0.5);
 
           trace_step(
                state, scene, camera, bvh, lights, params,
                [viewer](const string& message, int sample, int nsamples) {
-                 set_param(viewer, "render", "sample", to_json(sample),
-                     to_schema(sample, "Current sample"));
-                 print_progress(message, sample, nsamples);
+        set_param(viewer, "render", "sample", to_json(sample),
+            to_schema(sample, "Current sample"));
+        print_progress(message, sample, nsamples);
                },
               [viewer](const image<vec4f>& render, const image<vec4f>& canvas,
                   int current,
                   int total) {
-                 set_image(viewer, "render", render);
-                 //set_image(viewer, "canvas", canvas);
+        set_image(viewer, "render", render);
+        // set_image(viewer, "canvas", canvas);
                });
-        }
-      });
+    }
+  });
 
   // run view
   bool bProduction = false;  // ここをtrueにするとフルスクリーン
   if (bProduction)
-    yocto::run_view(viewer, {1920, 1200} , false, true);
+    yocto::run_view(viewer, {2160, 3840}, false, true);
   else
-    yocto::run_view(viewer, {1920, 1080}, true, false);
+    yocto::run_view(viewer, {1080, 1920}, true, false);
 
   // stop
   trace_stop(state);
@@ -379,8 +380,6 @@ int run_view(const view_params& params) {
 }
 
 #endif
-
-
 
 struct app_params {
   string command = "view";
