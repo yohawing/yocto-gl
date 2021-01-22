@@ -161,10 +161,21 @@ void init_scene(trace_scene* scene, sceneio_scene* ioscene,
   camera = camera_map.at(iocamera);
 }
 
+
+// jsonファイルの数を入れ、その下のview_paramsのscenes配列にjsonのパスを入れる
+// set scene json num
+static const int SCENE_NUM = 3;
+
 // convert params
 struct view_params : trace_params {
-  string scene     = "scene.json";
   string output    = "out.png";
+
+  // scene json list
+  string scenes[SCENE_NUM] = {
+     "../../../tests/environments1/environments1.json",
+     "../../../tests/zizo1/zizou1.json",
+     "../../../tests/materials1/materials1.json",
+  };
   string camera    = "";
   bool   addsky    = false;
   bool   savebatch = false;
@@ -174,7 +185,9 @@ struct view_params : trace_params {
 void serialize_value(json_mode mode, json_value& json, view_params& value,
     const string& description) {
   serialize_object(mode, json, value, description);
-  serialize_property(mode, json, value.scene, "scene", "Scene filename.", true);
+  for (int i=0; i<SCENE_NUM; i++)
+	serialize_property(mode, json, value.scenes[i], "scenes"+i, "Scene filename."+i, true);
+  //serialize_property(mode, json, value.scenes, "scenes", "Scene filename.", true);
   serialize_property(mode, json, value.output, "output", "Output filename.");
   serialize_property(mode, json, value.camera, "camera", "Camera name.");
   serialize_property(mode, json, value.addsky, "addsky", "Add sky.");
@@ -212,7 +225,6 @@ void draw_brush(trace_state* state, imageview_state* viewer, float threshold) {
 
     
 
-    // このへんで落ちるので改善する
     float dist  = distance(a, b);
     float value = clamp(1 - dist / state->brush.w * 2, 0.0, 1.0);
     // printf("%f \n", value);
@@ -224,16 +236,6 @@ void draw_brush(trace_state* state, imageview_state* viewer, float threshold) {
 }
 
 
-
-void change_scene(string scene_path, const view_params& params){
-  printf("change scene %s \n", scene_path.c_str());
-
-  // params.scene = "../../tests/materials1/materials1.json";
-
-  // run_view(params);
-
-}
-
 // interactive render
 int run_view(const view_params& params) {
 
@@ -243,44 +245,62 @@ int run_view(const view_params& params) {
   auto viewer       = viewer_guard.get();
 
   // scene loading
-  auto ioscene_guard = std::make_unique<sceneio_scene>();
-  auto ioscene       = ioscene_guard.get();
-  auto ioerror       = string{};
-  if (!load_scene(params.scene, ioscene, ioerror, print_progress))
-    return print_fatal(ioerror);
+  std::unique_ptr<trace_scene[]> scene_guards = std::make_unique<trace_scene[]>(SCENE_NUM);
+  std::unique_ptr<trace_bvh[]> bvh_guards = std::make_unique<trace_bvh[]>(SCENE_NUM);
+  std::unique_ptr<trace_lights[]> lights_guards = std::make_unique<trace_lights[]>(SCENE_NUM);
+  
+  trace_scene*  scene_arr[SCENE_NUM];
+  trace_camera* camera_arr[SCENE_NUM];
+  trace_bvh*    bvh_arr[SCENE_NUM];
+  trace_lights* lights_arr[SCENE_NUM];
 
-  // add sky
-  if (params.addsky) add_sky(ioscene);
+  for (int i = 0; i < SCENE_NUM; i++) {
+    // scene loading
+    auto ioscene_guard = std::make_unique<sceneio_scene>();
+   
+    auto ioscene       = ioscene_guard.get();
+    auto ioerror       = string{};
+    if (!load_scene(params.scenes[i], ioscene, ioerror, print_progress))
+      return print_fatal(ioerror);
 
-  // get camera
-  auto iocamera = get_camera(ioscene, params.camera);
+    // add sky
+    if (params.addsky) add_sky(ioscene);
 
-  // scene conversion
-  auto scene_guard = std::make_unique<trace_scene>();
-  auto scene       = scene_guard.get();
-  auto camera      = (trace_camera*)nullptr;
-  init_scene(scene, ioscene, camera, iocamera);
+    // get camera
+    auto iocamera = get_camera(ioscene, params.camera);
 
-  // cleanup
-  ioscene_guard.reset();
+    // scene conversion
+    scene_arr[i]  = &scene_guards.get()[i];
+    camera_arr[i]       = nullptr;
+    init_scene(scene_arr[i], ioscene, camera_arr[i], iocamera);
 
-  // tesselation
-  tesselate_shapes(scene, print_progress);
+    // cleanup
+    ioscene_guard.reset();
 
-  // build bvh
-  auto bvh_guard = std::make_unique<trace_bvh>();
-  auto bvh       = bvh_guard.get();
-  init_bvh(bvh, scene, params, print_progress);
+    // tesselation
+    tesselate_shapes(scene_arr[i], print_progress);
 
-  // init renderer
-  auto lights_guard = std::make_unique<trace_lights>();
-  auto lights       = lights_guard.get();
-  init_lights(lights, scene, params, print_progress);
+    // build bvh
+    bvh_arr[i]       = &bvh_guards.get()[i];
+    init_bvh(bvh_arr[i], scene_arr[i], params, print_progress);
 
-  // fix renderer type if no lights
-  if (lights->lights.empty() && is_sampler_lit(params)) {
-    print_info("no lights presents, image will be black");
+    // init renderer
+    lights_arr[i] = &lights_guards.get()[i];
+    init_lights(lights_arr[i], scene_arr[i], params, print_progress);
+
+    // fix renderer type if no lights
+    if (lights_arr[i]->lights.empty() && is_sampler_lit(params)) {
+      print_info("no lights presents, image will be black");
+    }
   }
+
+  int           current_scene = 0;
+  trace_scene*  scene             = scene_arr[current_scene];
+  trace_camera* camera            = camera_arr[current_scene];
+  trace_bvh*    bvh               = bvh_arr[current_scene];
+  trace_lights* lights            = lights_arr[current_scene];
+
+
 
 #pragma endregion
 
@@ -312,7 +332,7 @@ int run_view(const view_params& params) {
 
   // set callback
   // Viewerの変更のコールバック
-  set_callback(viewer, [state, scene, camera, bvh, lights, viewer, &params](
+  set_callback(viewer, [state, &scene, &camera, &bvh, &lights, viewer, &params](
                            const string& name, const json_value& uiparams,
                            const gui_input& input) {
     if (name != "render" && name != "canvas") return;
@@ -375,11 +395,35 @@ int run_view(const view_params& params) {
 
   });
 
-  set_callback(viewer,[&params](const int& key, const bool& pressed, const gui_input& input){
+  set_callback(viewer,[state, &scene, &camera, &bvh, &lights, scene_arr, camera_arr, bvh_arr, lights_arr, viewer, &current_scene, &params](const int& key, const bool& pressed, const gui_input& input){ printf("key pressed   keyid_%d pressed_%d \n", key, pressed);
+
       printf("key pressed   keyid_%d pressed_%d \n", key, pressed);
+      // ここ以下をキーインプットのif文の中にまるごと入れる
+      trace_stop(state);
+        
+      current_scene = (current_scene + 1) % SCENE_NUM;
+      
+      scene  = scene_arr[current_scene];
+      camera = camera_arr[current_scene];
+      bvh    = bvh_arr[current_scene];
+      lights = lights_arr[current_scene];
+
+
+      trace_start(
+          state, scene, camera, bvh, lights, params,
+          [viewer](const string& message, int sample, int nsamples) {
+            set_param(viewer, "render", "sample", to_json(sample),
+                to_schema(sample, "Current sample"));
+            print_progress(message, sample, nsamples);
+          },
+          [viewer](const image<vec4f>& render, const image<vec4f>& canvas,
+              int current, int total) {
+            set_image(viewer, "render", render);
+            // set_image(viewer, "canvas", canvas);
+          });
+
 
       if(key == 321 && pressed == false){ //numpad 1
-        change_scene("./test", params);
       };
 
   });
@@ -423,7 +467,7 @@ int main(int argc, const char* argv[]) {
   params.view.samples    = 64;
   params.view.resolution = 3840;
   params.view.pratio     = 2;
-  params.view.scene      = "../../tests/zizo1/zizou1.json";
+  //params.view.scene      = "../../../tests/zizo1/zizou1.json";
 
   // parse_cli(params, "Render images from scenes", argc, argv);
 
