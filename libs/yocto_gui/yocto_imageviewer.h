@@ -86,9 +86,15 @@ void set_params(imageview_state* viewer, const string& name,
 // Set ui callback
 using imageview_callback =
     function<void(const string&, const json_value&, const gui_input&)>;
-void set_callback(imageview_state* viewer, const imageview_callback& callback);
 
-}  // namespace yocto
+using keyinput_callback =
+    function<void(const int&, const bool&, const gui_input&)>;
+    void set_callback(imageview_state* viewer, const imageview_callback& callback);
+void set_callback(imageview_state* viewer,  const keyinput_callback& key_cb);
+
+
+}
+// namespace yocto
 
 // -----------------------------------------------------------------------------
 //
@@ -158,6 +164,7 @@ struct imageview_state {
   std::mutex                 input_mutex = {};
   vector<imageview_inputptr> inputs      = {};  // input images
   imageview_callback         callback    = {};  // params and ui callback
+  keyinput_callback          key_cb = {};
 };
 
 }  // namespace yocto

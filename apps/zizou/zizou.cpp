@@ -188,7 +188,7 @@ void serialize_value(json_mode mode, json_value& json, view_params& value,
 #ifndef YOCTO_OPENGL
 
 // convert images
-int run_view(const view_params& params) {
+int run_view(const view_params& params, const imageview_state& viewer) {
   return print_fatal("Opengl not compiled");
 }
 
@@ -210,6 +210,8 @@ void draw_brush(trace_state* state, imageview_state* viewer, float threshold) {
     vec2f a = {float(_i - state->brush.w / 2), float(_j - state->brush.h / 2)};
     vec2f b = {float(state->brush.x), float(state->brush.y)};
 
+    
+
     // このへんで落ちるので改善する
     float dist  = distance(a, b);
     float value = clamp(1 - dist / state->brush.w * 2, 0.0, 1.0);
@@ -221,12 +223,22 @@ void draw_brush(trace_state* state, imageview_state* viewer, float threshold) {
   // set_image(viewer, "canvas", state->canvas);
 }
 
+
+
+void change_scene(string scene_path, const view_params& params){
+  printf("change scene %s \n", scene_path.c_str());
+
+  // params.scene = "../../tests/materials1/materials1.json";
+
+  // run_view(params);
+
+}
+
 // interactive render
 int run_view(const view_params& params) {
 
 #pragma region Setting scene
 
-  // open viewer
   auto viewer_guard = make_imageview("yimage");
   auto viewer       = viewer_guard.get();
 
@@ -295,6 +307,9 @@ int run_view(const view_params& params) {
   set_params(
       viewer, "render", to_json(params), to_schema(params, "Render params"));
 
+
+  // set_callback(viewer, )
+
   // set callback
   // Viewerの変更のコールバック
   set_callback(viewer, [state, scene, camera, bvh, lights, viewer, &params](
@@ -317,37 +332,30 @@ int run_view(const view_params& params) {
 
     } else if ((input.mouse_left || input.mouse_right) &&
                input.mouse_pos != input.mouse_last) {
-      //          trace_stop(state);
-      //          auto dolly  = 0.0f;
-      //          auto pan    = zero2f;
-      //          auto rotate = zero2f;
-      //          if (input.mouse_left && !input.modifier_shift)
-      //            rotate = (input.mouse_pos - input.mouse_last) / 100.0f;
-      //          if (input.mouse_right)
-      //            dolly = (input.mouse_pos.x - input.mouse_last.x) /
-      //            100.0f;
-      //          if (input.mouse_left && input.modifier_shift)
-      //            pan = (input.mouse_pos - input.mouse_last) *
-      //            camera->focus / 200.0f;
-      //          pan.x                                  = -pan.x;
-      //          std::tie(camera->frame, camera->focus) = camera_turntable(
-      //              camera->frame, camera->focus, rotate, dolly, pan);
 
       printf(
           "mouse_pos__ x: %f, y: %f \n", input.mouse_pos.x, input.mouse_pos.y);
 
       int barHeight = int((input.window_size.y - state->render.height()) / 2);
 
-      state->brush.w     = 500;
-      state->brush.h     = 5
-          00;
-      state->brush.x     = int((input.mouse_pos.x - input.window_size.x / 2) +
-                           state->render.width() / 2 - (state->brush.w / 2));
-          state->brush.y = int((input.mouse_pos.y - input.window_size.y / 2) +
-                                   state->render.height() / 2 -
-                                   (state->brush.h / 2));
+      state->brush.w     = 400;
+      state->brush.h     = 400;
+      
+        float window_ratio = float(input.window_size.x) /
+            float(input.window_size.y);
+
+        vec2f npos = {float(input.mouse_pos.x) / float(input.window_size.x),
+            float(input.mouse_pos.y) / float(input.window_size.y)};
+
+        printf("normalized_pos__ x: %f, y: %f \n", npos.x, npos.y);
+
+        state->brush.x = int( npos.x * state->render.width() - (state->brush.w / 2));
+        state->brush.y = int( npos.y * state->render.height() -(state->brush.h / 2));
+
+          
           
           draw_brush(state, viewer, 0.5);
+          
 
           trace_step(
                state, scene, camera, bvh, lights, params,
@@ -363,10 +371,21 @@ int run_view(const view_params& params) {
         // set_image(viewer, "canvas", canvas);
                });
     }
+
+
+  });
+
+  set_callback(viewer,[&params](const int& key, const bool& pressed, const gui_input& input){
+      printf("key pressed   keyid_%d pressed_%d \n", key, pressed);
+
+      if(key == 321 && pressed == false){ //numpad 1
+        change_scene("./test", params);
+      };
+
   });
 
   // run view
-  bool bProduction = false;  // ここをtrueにするとフルスクリーン
+  bool bProduction = true;  // ここをtrueにするとフルスクリーン
   if (bProduction)
     yocto::run_view(viewer, {2160, 3840}, false, true);
   else
@@ -396,18 +415,22 @@ void serialize_value(json_mode mode, json_value& json, app_params& value,
   serialize_property(mode, json, value.view, "view", "Render interactively.");
 }
 
+
 int main(int argc, const char* argv[]) {
   // parse cli
   auto params = app_params{};
 
   params.view.samples    = 64;
-  params.view.resolution = 1920;
+  params.view.resolution = 3840;
   params.view.pratio     = 2;
   params.view.scene      = "../../tests/zizo1/zizou1.json";
 
   // parse_cli(params, "Render images from scenes", argc, argv);
 
   // dispatch commands
+
+  // open viewer
+  
 
   return run_view(params.view);
 }

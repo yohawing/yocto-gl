@@ -122,6 +122,10 @@ void set_callback(imageview_state* state, const imageview_callback& callback) {
   state->callback = callback;
 }
 
+void set_callback(imageview_state* state, const keyinput_callback& key_cb) {
+  state->key_cb = key_cb;
+}
+
 }  // namespace yocto
 
 // -----------------------------------------------------------------------------
@@ -317,10 +321,12 @@ void run_view(imageview_state* state, const vec2i& window_size, bool widgets_lef
       if (state->callback) state->callback(state->selected->name, {}, input);
     }
   };
-
+  callbacks.key_cb = [state](gui_window* win, int key, bool pressed, const gui_input& input){
+    if(state->key_cb) state->key_cb(key, pressed, input);
+  };
   
   // run ui
   run_ui(window_size, "zizo.app", callbacks, 0, widgets_left, bFullscreen);
 }
 
-}  // namespace yocto
+}  // namespace yoct
